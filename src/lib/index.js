@@ -1,1 +1,1 @@
-export const APP_NAME = 'Personal Finance';
+export const AppName = 'Financial Portal';

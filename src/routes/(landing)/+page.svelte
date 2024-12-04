@@ -1,7 +1,7 @@
 <script>
 	import Logo from '$assets/logo.png';
 	import Marketing from '$assets/marketing.jpg';
-	import { APP_NAME } from '$lib';
+	import { AppName } from '$lib';
 
 	/**
 	 * @type {{
@@ -12,7 +12,7 @@
 </script>
 
 <svelte:head>
-	<title>{APP_NAME}</title>
+	<title>{AppName}</title>
 	<link rel="shortcut icon" href={Logo} type="image/png" />
 </svelte:head>
 
