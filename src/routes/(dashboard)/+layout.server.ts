@@ -1,8 +1,8 @@
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
-export const load = (async ({ locals }) => {
-	const user = (await locals.auth.authenticate()) as
+export const load = (async ({ locals, url }) => {
+	const user = (await locals.auth.getUser()) as
 		| {
 				id: number;
 				username: string;
@@ -10,6 +10,8 @@ export const load = (async ({ locals }) => {
 		  }
 		| undefined;
 
-	if (!user) redirect(307, '/');
+	url.searchParams.append('returnTo', encodeURIComponent(url.href));
+	if (!user) redirect(307, `/sign-in?${url.searchParams}`);
+
 	return {};
 }) satisfies LayoutServerLoad;

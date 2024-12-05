@@ -12,7 +12,7 @@ export class Auth<T> {
 		this.#verify = verify;
 	}
 
-	async authenticate() {
+	async getUser() {
 		return this.#verify();
 	}
 }

@@ -5,15 +5,21 @@ import type { Actions, PageServerLoad } from './$types';
 import type Joi from 'joi';
 import bcrypt from 'bcrypt';
 import { redirect } from '@sveltejs/kit';
+import * as jose from 'jose';
+import { AppName } from '$lib';
+import { secret } from '$lib/server/auth';
 
-export const load = (async () => {
+export const load = (async ({ locals }) => {
+	const user = await locals.auth.getUser();
+	if (user) redirect(303, '/dashboard');
+
 	return {};
 }) satisfies PageServerLoad;
 
 const saltRounds = 12;
 
 export const actions: Actions = {
-	default: async ({ request }) => {
+	default: async ({ request, cookies, url }) => {
 		const signUpRequest = Object.fromEntries(await request.formData());
 		const { error: err, value: userSignUp } = <
 			{
@@ -43,9 +49,32 @@ export const actions: Actions = {
 			};
 
 		try {
-			await db.insert(users).values({
-				username: userSignUp.email,
-				password: await bcrypt.hash(userSignUp.password, saltRounds)
+			const user = (
+				await db
+					.insert(users)
+					.values({
+						username: userSignUp.email,
+						password: await bcrypt.hash(userSignUp.password, saltRounds)
+					})
+					.returning()
+			)[0];
+
+			const tempDate = new Date();
+			const lifeTime = tempDate.setSeconds(tempDate.getSeconds() + 7200);
+
+			const accessToken = await new jose.SignJWT({ id: user.id })
+				.setProtectedHeader({ alg: 'HS256' })
+				.setIssuedAt()
+				.setIssuer(AppName)
+				.setAudience(AppName)
+				.setExpirationTime(Math.floor(lifeTime / 1000))
+				.sign(secret);
+
+			cookies.set('access', accessToken, {
+				secure: true,
+				path: '/',
+				httpOnly: true,
+				expires: new Date(lifeTime)
 			});
 		} catch (err) {
 			console.error(err);
@@ -54,7 +83,8 @@ export const actions: Actions = {
 			};
 		}
 
-		// TODO: add jwt here
+		const returnTo = url.searchParams.get('returnTo');
+		if (returnTo) redirect(303, decodeURIComponent(returnTo));
 
 		redirect(303, '/dashboard');
 	}

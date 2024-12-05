@@ -1,5 +1,4 @@
 <script>
-	import Logo from '$assets/logo.png';
 	import Marketing from '$assets/marketing.jpg';
 	import { AppName } from '$lib';
 
@@ -13,11 +12,10 @@
 
 <svelte:head>
 	<title>{AppName}</title>
-	<link rel="shortcut icon" href={Logo} type="image/png" />
 </svelte:head>
 
-<section class="bg-[#f2ece5]">
-	<div
+<div class="min-h-full bg-[#f2ece5]">
+	<main
 		class="mx-auto grid h-screen max-w-screen-xl px-4 py-8 lg:grid-cols-12 lg:gap-8 lg:py-16 xl:gap-0"
 	>
 		<div class="mr-auto place-self-center lg:col-span-6">
@@ -57,5 +55,5 @@
 		<div class="hidden lg:col-span-6 lg:mt-0 lg:flex">
 			<img src={Marketing} alt="mockup" />
 		</div>
-	</div>
-</section>
+	</main>
+</div>

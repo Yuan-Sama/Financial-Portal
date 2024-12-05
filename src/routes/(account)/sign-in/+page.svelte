@@ -1,8 +1,12 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import { AppName } from '$lib';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+
+	let searchParams = $page.url.searchParams;
+	let params = searchParams.size ? `?${searchParams}` : '';
 </script>
 
 <svelte:head>
@@ -54,7 +58,7 @@
 	>
 	<p class="text-sm font-light text-gray-500 dark:text-gray-400">
 		Don’t have an account yet? <a
-			href="/sign-up"
+			href={`/sign-up${params}`}
 			class="font-medium text-primary-600 hover:underline dark:text-primary-500">Sign up</a
 		>
 	</p>
