@@ -1,5 +1,5 @@
 import { AppName } from '$lib';
-import { AccessTokenName, Auth, secret } from '$lib/server/auth';
+import { AccessTokenName, secret } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/user';
 import type { Handle } from '@sveltejs/kit';
@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import * as jose from 'jose';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	event.locals.auth = new Auth(async () => {
+	event.locals.getUser = async () => {
 		const accessToken = event.cookies.get(AccessTokenName);
 		if (!accessToken) return;
 
@@ -24,6 +24,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 			console.error(err);
 			return;
 		}
-	});
+	};
 	return resolve(event);
 };

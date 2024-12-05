@@ -4,7 +4,7 @@ import type { Actions } from './$types';
 
 export const actions: Actions = {
 	default: async ({ locals, cookies }) => {
-		const user = await locals.auth.getUser();
+		const user = await locals.getUser();
 		if (!user) return {};
 
 		cookies.delete(AccessTokenName, {

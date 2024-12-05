@@ -7,10 +7,10 @@ import { redirect } from '@sveltejs/kit';
 import type Joi from 'joi';
 import * as jose from 'jose';
 import { AppName } from '$lib';
-import { AccessTokenName, secret } from '$lib/server/auth';
+import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/auth';
 
 export const load = (async ({ locals }) => {
-	const user = await locals.auth.getUser();
+	const user = await locals.getUser();
 	if (user) redirect(303, '/');
 
 	return {};
@@ -37,18 +37,18 @@ export const actions: Actions = {
 		const lifeTime = tempDate.setSeconds(tempDate.getSeconds() + 7200);
 
 		const accessToken = await new jose.SignJWT({ id: user.id })
-			.setProtectedHeader({ alg: 'HS256' })
+			.setProtectedHeader({ alg })
 			.setIssuedAt()
 			.setIssuer(AppName)
 			.setAudience(AppName)
-			.setExpirationTime(Math.floor(lifeTime / 1000))
+			.setExpirationTime(Math.floor(lifeTimeInSeconds / 1000))
 			.sign(secret);
 
 		cookies.set(AccessTokenName, accessToken, {
 			secure: true,
 			path: '/',
 			httpOnly: true,
-			expires: new Date(lifeTime)
+			expires: new Date(lifeTimeInSeconds)
 		});
 
 		const returnTo = url.searchParams.get('returnTo');

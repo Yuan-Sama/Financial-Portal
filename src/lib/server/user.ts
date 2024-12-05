@@ -1,3 +1,4 @@
+import type { InferSelectModel } from 'drizzle-orm';
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import Joi from 'joi';
 
@@ -6,6 +7,8 @@ export const users = sqliteTable('users', {
 	username: text('username').notNull(),
 	password: text('password').notNull()
 });
+
+export type User = InferSelectModel<typeof users>;
 
 export const userSignInValidator = Joi.object({
 	email: Joi.string().email().required(),

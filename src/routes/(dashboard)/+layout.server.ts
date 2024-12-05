@@ -2,13 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
 export const load = (async ({ locals, url }) => {
-	const user = (await locals.auth.getUser()) as
-		| {
-				id: number;
-				username: string;
-				password: string;
-		  }
-		| undefined;
+	const user = await locals.getUser();
 
 	if (!user) redirect(307, `/welcome`);
 

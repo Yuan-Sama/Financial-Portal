@@ -7,10 +7,10 @@ import bcrypt from 'bcrypt';
 import { redirect } from '@sveltejs/kit';
 import * as jose from 'jose';
 import { AppName } from '$lib';
-import { secret } from '$lib/server/auth';
+import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/auth';
 
 export const load = (async ({ locals }) => {
-	const user = await locals.auth.getUser();
+	const user = await locals.getUser();
 	if (user) redirect(303, '/');
 
 	return {};
@@ -59,22 +59,19 @@ export const actions: Actions = {
 					.returning()
 			)[0];
 
-			const tempDate = new Date();
-			const lifeTime = tempDate.setSeconds(tempDate.getSeconds() + 7200);
-
 			const accessToken = await new jose.SignJWT({ id: user.id })
-				.setProtectedHeader({ alg: 'HS256' })
+				.setProtectedHeader({ alg })
 				.setIssuedAt()
 				.setIssuer(AppName)
 				.setAudience(AppName)
-				.setExpirationTime(Math.floor(lifeTime / 1000))
+				.setExpirationTime(Math.floor(lifeTimeInSeconds / 1000))
 				.sign(secret);
 
-			cookies.set('access', accessToken, {
+			cookies.set(AccessTokenName, accessToken, {
 				secure: true,
 				path: '/',
 				httpOnly: true,
-				expires: new Date(lifeTime)
+				expires: new Date(lifeTimeInSeconds)
 			});
 		} catch (err) {
 			console.error(err);
