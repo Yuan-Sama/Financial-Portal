@@ -9,10 +9,4 @@
 	<title>{AppName} - Dashboard</title>
 </svelte:head>
 
-<header>
-	<form action="/sign-out" method="post">
-		<button type="submit">Sign out</button>
-	</form>
-</header>
-
 <h1>Dashboard</h1>

@@ -10,8 +10,7 @@ export const load = (async ({ locals, url }) => {
 		  }
 		| undefined;
 
-	url.searchParams.append('returnTo', encodeURIComponent(url.href));
-	if (!user) redirect(307, `/sign-in?${url.searchParams}`);
+	if (!user) redirect(307, `/welcome`);
 
 	return {};
 }) satisfies LayoutServerLoad;

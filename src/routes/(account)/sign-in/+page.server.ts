@@ -11,7 +11,7 @@ import { AccessTokenName, secret } from '$lib/server/auth';
 
 export const load = (async ({ locals }) => {
 	const user = await locals.auth.getUser();
-	if (user) redirect(303, '/dashboard');
+	if (user) redirect(303, '/');
 
 	return {};
 }) satisfies PageServerLoad;
@@ -54,6 +54,6 @@ export const actions: Actions = {
 		const returnTo = url.searchParams.get('returnTo');
 		if (returnTo) redirect(303, decodeURIComponent(returnTo));
 
-		redirect(303, '/dashboard');
+		redirect(303, '/');
 	}
 };
