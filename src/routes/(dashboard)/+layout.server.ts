@@ -12,5 +12,7 @@ export const load = (async ({ locals, url }) => {
 
 	if (!user) redirect(307, `/welcome`);
 
-	return {};
+	return {
+		user
+	};
 }) satisfies LayoutServerLoad;

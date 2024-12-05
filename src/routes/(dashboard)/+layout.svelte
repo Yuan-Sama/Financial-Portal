@@ -31,7 +31,17 @@
 	];
 
 	let mobileNavHidden = $state(true);
+	let userMenuHidden = $state(true);
+	let userMenuInstance: HTMLDivElement;
+
+	function onclick($event: MouseEvent & { currentTarget: EventTarget & Document }) {
+		if (!userMenuInstance.contains($event.target as Node)) {
+			userMenuHidden = true;
+		}
+	}
 </script>
+
+<svelte:document onclick={(e) => onclick(e)} />
 
 <header class="bg-gradient-to-b from-primary-700 to-primary-500 px-4 py-8 pb-36 lg:px-14">
 	<div class="mx-auto max-w-screen-2xl">
@@ -57,6 +67,7 @@
 						>
 					{/each}
 				</nav>
+
 				<nav
 					class="mx-auto flex max-w-screen-xl flex-wrap items-center justify-between p-4 lg:hidden"
 				>
@@ -138,10 +149,38 @@
 				</nav>
 			</div>
 
-			<div>
-				<form action="/sign-out" method="post" class="text-white">
-					<button type="submit">Sign out</button>
-				</form>
+			<div class="relative" bind:this={userMenuInstance}>
+				<button type="button" onclick={() => (userMenuHidden = !userMenuHidden)}>
+					<div
+						class="relative inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gray-100 dark:bg-gray-600"
+					>
+						<span class="font-medium text-gray-600 dark:text-gray-300">DE</span>
+					</div>
+				</button>
+
+				<div
+					class="right-0 top-11 z-10 w-44 divide-y divide-gray-100 rounded-lg bg-white shadow dark:divide-gray-600 dark:bg-gray-700 {userMenuHidden
+						? 'hidden'
+						: 'absolute'}"
+				>
+					<div class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+						<div>Demo Example</div>
+						<div class="truncate font-medium">{data.user.username}</div>
+					</div>
+					<!-- <ul
+						class="py-2 text-sm text-gray-700 dark:text-gray-200"
+						aria-labelledby="avatarButton"
+					></ul> -->
+					<div class="py-1">
+						<form action="/sign-out" method="post">
+							<button
+								type="submit"
+								class="block w-full px-4 py-2 text-start text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-600 dark:hover:text-white"
+								>Sign out</button
+							>
+						</form>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
