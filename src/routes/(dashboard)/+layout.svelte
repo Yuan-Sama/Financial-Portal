@@ -183,6 +183,11 @@
 				</div>
 			</div>
 		</div>
+
+		<div class="mb-4 space-y-2">
+			<h2 class="text-2xl font-medium text-white lg:text-4xl">Welcome Back 👋🏻</h2>
+			<p class="text-sm text-[#89b6fd] lg:text-base">This is your financial reports</p>
+		</div>
 	</div>
 </header>
 <main class="px-3 dark:text-white lg:px-14">
