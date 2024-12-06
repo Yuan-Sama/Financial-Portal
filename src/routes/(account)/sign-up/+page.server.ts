@@ -67,6 +67,10 @@ export const actions: Actions = {
 				.setExpirationTime(Math.floor(lifeTimeInSeconds / 1000))
 				.sign(secret);
 
+			cookies.delete(AccessTokenName, {
+				path: '/'
+			});
+
 			cookies.set(AccessTokenName, accessToken, {
 				secure: true,
 				path: '/',

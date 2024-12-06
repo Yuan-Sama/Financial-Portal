@@ -25,5 +25,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 			return;
 		}
 	};
+
 	return resolve(event);
 };

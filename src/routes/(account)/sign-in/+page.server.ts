@@ -33,9 +33,6 @@ export const actions: Actions = {
 		const passwordsMatch = await bcrypt.compare(userSignIn.password, user.password);
 		if (!passwordsMatch) return { error: 'Email or password incorrect' };
 
-		const tempDate = new Date();
-		const lifeTime = tempDate.setSeconds(tempDate.getSeconds() + 7200);
-
 		const accessToken = await new jose.SignJWT({ id: user.id })
 			.setProtectedHeader({ alg })
 			.setIssuedAt()
@@ -43,6 +40,10 @@ export const actions: Actions = {
 			.setAudience(AppName)
 			.setExpirationTime(Math.floor(lifeTimeInSeconds / 1000))
 			.sign(secret);
+
+		cookies.delete(AccessTokenName, {
+			path: '/'
+		});
 
 		cookies.set(AccessTokenName, accessToken, {
 			secure: true,

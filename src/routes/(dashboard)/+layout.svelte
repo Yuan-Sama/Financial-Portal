@@ -98,7 +98,7 @@
 						</svg>
 					</button>
 
-					<OffCanvasSidebar bind:hide={mobileNavHidden}>
+					<OffCanvasSidebar bind:hide={mobileNavHidden} class="w-3/4 md:w-1/2">
 						{#snippet header()}
 							<h5 class="text-base font-semibold uppercase text-gray-500 dark:text-gray-400">
 								{AppName}

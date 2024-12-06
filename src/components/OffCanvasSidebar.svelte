@@ -3,11 +3,13 @@
 
 	let {
 		hide = $bindable(true),
+		class: clazz = '',
 		position = 'left',
 		header,
 		children
 	}: {
 		hide: boolean;
+		class?: string;
 		position?: 'left' | 'right';
 		header?: Snippet;
 		children?: Snippet;
@@ -30,7 +32,7 @@
 		? 'transform-none'
 		: position === 'left'
 			? '-translate-x-full'
-			: 'translate-x-full'}"
+			: 'translate-x-full'}{clazz.trim() ? ` ${clazz}` : ''}"
 	tabindex="-1"
 >
 	{@render header?.()}
