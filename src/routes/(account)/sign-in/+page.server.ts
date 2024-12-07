@@ -1,13 +1,14 @@
 import { db } from '$lib/server/db';
-import { userSignInValidator, users } from '$lib/server/user';
+import { getUserByUsername, userSignInValidator, users } from '$lib/server/user';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import bcrypt from 'bcrypt';
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type Joi from 'joi';
 import * as jose from 'jose';
 import { AppName } from '$lib';
 import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/auth';
+import { dev } from '$app/environment';
 
 export const load = (async ({ locals }) => {
 	const user = await locals.getUser();
@@ -16,22 +17,30 @@ export const load = (async ({ locals }) => {
 	return {};
 }) satisfies PageServerLoad;
 
+async function signIn(username: string, password: string) {
+	const user = await getUserByUsername(username);
+	if (!user) return undefined;
+
+	const passwordsMatch = await bcrypt.compare(password, user.password);
+	if (!passwordsMatch) return undefined;
+
+	return user;
+}
+
 export const actions: Actions = {
 	default: async ({ request, cookies, url }) => {
 		const signInRequest = Object.fromEntries(await request.formData());
+
+		// TODO: replace with zod
 		const { error: err, value: userSignIn } = <
 			{ error: Joi.ValidationError | undefined; value: { email: string; password: string } }
 		>userSignInValidator.validate(signInRequest);
 
-		if (err) return { error: 'Email or password incorrect' };
+		// TODO: enhance validation error
+		if (err) return fail(400, { error: 'Email or password incorrect' });
 
-		const user = (
-			await db.select().from(users).where(eq(users.username, userSignIn.email)).limit(1)
-		)[0];
-		if (!user) return { error: 'Email or password incorrect' };
-
-		const passwordsMatch = await bcrypt.compare(userSignIn.password, user.password);
-		if (!passwordsMatch) return { error: 'Email or password incorrect' };
+		const user = await signIn(userSignIn.email, userSignIn.password);
+		if (!user) return fail(400, { error: 'Email or password incorrect' });
 
 		const accessToken = await new jose.SignJWT({ id: user.id })
 			.setProtectedHeader({ alg })
@@ -41,14 +50,10 @@ export const actions: Actions = {
 			.setExpirationTime(Math.floor(lifeTimeInSeconds / 1000))
 			.sign(secret);
 
-		cookies.delete(AccessTokenName, {
-			path: '/'
-		});
-
 		cookies.set(AccessTokenName, accessToken, {
-			secure: true,
+			secure: !dev,
 			path: '/',
-			httpOnly: true,
+			httpOnly: !dev,
 			expires: new Date(lifeTimeInSeconds)
 		});
 

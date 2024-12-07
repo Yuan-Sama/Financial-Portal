@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { users, userSignUpValidator } from '$lib/server/user';
+import { getUserByUsername, users, userSignUpValidator } from '$lib/server/user';
 import { eq } from 'drizzle-orm';
 import type { Actions, PageServerLoad } from './$types';
 import type Joi from 'joi';
@@ -8,6 +8,7 @@ import { redirect } from '@sveltejs/kit';
 import * as jose from 'jose';
 import { AppName } from '$lib';
 import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/auth';
+import { dev } from '$app/environment';
 
 export const load = (async ({ locals }) => {
 	const user = await locals.getUser();
@@ -40,9 +41,7 @@ export const actions: Actions = {
 			};
 		}
 
-		const existedUser = (
-			await db.select().from(users).where(eq(users.username, userSignUp.email)).limit(1)
-		)[0];
+		const existedUser = await getUserByUsername(userSignUp.email);
 		if (existedUser)
 			return {
 				error: 'User exists'
@@ -67,14 +66,10 @@ export const actions: Actions = {
 				.setExpirationTime(Math.floor(lifeTimeInSeconds / 1000))
 				.sign(secret);
 
-			cookies.delete(AccessTokenName, {
-				path: '/'
-			});
-
 			cookies.set(AccessTokenName, accessToken, {
-				secure: true,
+				secure: !dev,
 				path: '/',
-				httpOnly: true,
+				httpOnly: !dev,
 				expires: new Date(lifeTimeInSeconds)
 			});
 		} catch (err) {

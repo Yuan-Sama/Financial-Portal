@@ -1,6 +1,7 @@
-import type { InferSelectModel } from 'drizzle-orm';
+import { eq, type InferSelectModel } from 'drizzle-orm';
 import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 import Joi from 'joi';
+import { db } from './db';
 
 export const users = sqliteTable('users', {
 	id: integer('id').primaryKey(),
@@ -21,3 +22,7 @@ export const userSignUpValidator = Joi.object({
 	password: Joi.string().required(),
 	confirmPassword: Joi.string().required()
 });
+
+export async function getUserByUsername(username: string) {
+	return (await db.select().from(users).where(eq(users.username, username)).limit(1)).at(0);
+}
