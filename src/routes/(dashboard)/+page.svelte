@@ -11,7 +11,6 @@
 	let { data }: { data: PageData } = $props();
 	let hide = $state(true);
 	let submitting = $state(false);
-	let counter = $state(1);
 
 	const submiteCreateAccount: SubmitFunction = ({
 		formData,
@@ -28,6 +27,8 @@
 				await update();
 				hide = true;
 				toast.success('Account created');
+			} else if (result.type === 'failure') {
+				toast.error(result.data?.error);
 			}
 			submitting = false;
 		};

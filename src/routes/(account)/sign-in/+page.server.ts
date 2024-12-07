@@ -1,13 +1,12 @@
-import { userSignInValidator } from '$lib/server/user.schema';
 import type { Actions, PageServerLoad } from './$types';
 import bcrypt from 'bcrypt';
 import { fail, redirect } from '@sveltejs/kit';
-import type Joi from 'joi';
 import * as jose from 'jose';
 import { AppName } from '$lib';
 import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/auth';
 import { dev } from '$app/environment';
 import { getUserByUsername } from '$lib/server/user';
+import { signInSchema } from '$lib/server/user.schema';
 
 export const load = (async ({ locals }) => {
 	const user = await locals.getUser();
@@ -28,17 +27,14 @@ async function signIn(username: string, password: string) {
 
 export const actions: Actions = {
 	default: async ({ request, cookies, url }) => {
-		const signInRequest = Object.fromEntries(await request.formData());
+		const formData = await request.formData();
+		const rawData = Object.fromEntries(formData);
 
-		// TODO: replace with zod
-		const { error: err, value: userSignIn } = <
-			{ error: Joi.ValidationError | undefined; value: { email: string; password: string } }
-		>userSignInValidator.validate(signInRequest);
+		const result = signInSchema.safeParse(rawData);
 
-		// TODO: enhance validation error
-		if (err) return fail(400, { error: 'Email or password incorrect' });
+		if (result.error) return fail(400, { error: 'Email or password incorrect' });
 
-		const user = await signIn(userSignIn.email, userSignIn.password);
+		const user = await signIn(result.data.username, result.data.password);
 		if (!user) return fail(400, { error: 'Email or password incorrect' });
 
 		const accessToken = await new jose.SignJWT({ id: user.id })

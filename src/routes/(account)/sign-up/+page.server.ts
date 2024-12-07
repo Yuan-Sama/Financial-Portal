@@ -1,9 +1,8 @@
 import { db } from '$lib/server/db';
-import { users, userSignUpValidator } from '$lib/server/user.schema';
+import { signUpSchema, users } from '$lib/server/user.schema';
 import type { Actions, PageServerLoad } from './$types';
-import type Joi from 'joi';
 import bcrypt from 'bcrypt';
-import { redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import * as jose from 'jose';
 import { AppName } from '$lib';
 import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/auth';
@@ -21,39 +20,29 @@ const saltRounds = 12;
 
 export const actions: Actions = {
 	default: async ({ request, cookies, url }) => {
-		const signUpRequest = Object.fromEntries(await request.formData());
-		const { error: err, value: userSignUp } = <
-			{
-				error: Joi.ValidationError | undefined;
-				value: {
-					email: string;
-					password: string;
-					confirmPassword: string;
-				};
-			}
-		>userSignUpValidator.validate(signUpRequest);
+		const formData = await request.formData();
+		const rawData = Object.fromEntries(formData);
 
-		if (err) {
-			console.error(err);
-			// TODO: enhance error
-			return {
-				error: 'Something wrong with sign up'
-			};
+		const result = signUpSchema.safeParse(rawData);
+
+		if (result.error) {
+			console.error(result.error);
+			return fail(400, { error: 'Something wrong with sign up' });
 		}
 
-		const existedUser = await getUserByUsername(userSignUp.email);
+		const existedUser = await getUserByUsername(result.data.username);
 		if (existedUser)
-			return {
+			return fail(400, {
 				error: 'User exists'
-			};
+			});
 
 		try {
 			const user = (
 				await db
 					.insert(users)
 					.values({
-						username: userSignUp.email,
-						password: await bcrypt.hash(userSignUp.password, saltRounds)
+						username: result.data.username,
+						password: await bcrypt.hash(result.data.password, saltRounds)
 					})
 					.returning()
 			)[0];

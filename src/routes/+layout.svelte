@@ -12,7 +12,7 @@
 <Toaster class="max-w-xl space-y-3" yPosition="bottom">
 	{#snippet toastInstance({ id, type, message }, remove)}
 		<div
-			class="flex w-64 max-w-sm items-center rounded-lg bg-gray-400 p-4 shadow-lg dark:bg-gray-700 dark:text-gray-200"
+			class="flex w-96 max-w-sm items-center rounded-lg bg-gray-400 p-4 shadow-lg dark:bg-gray-700 dark:text-gray-200"
 			role="alert"
 		>
 			<div

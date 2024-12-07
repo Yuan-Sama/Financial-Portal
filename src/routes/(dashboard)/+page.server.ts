@@ -17,7 +17,17 @@ export const actions: Actions = {
 		const rawData = Object.fromEntries(formData);
 
 		// TODO: validation here
-		const values = insertAccountSchema.pick({ name: true }).parse(rawData);
+		const result = insertAccountSchema.pick({ name: true }).safeParse(rawData);
+
+		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+
+		if (result.error) {
+			return fail(400, {
+				error: result.error.errors[0].message
+			});
+		}
+
+		const values = result.data;
 
 		const data = (
 			await db
@@ -28,8 +38,6 @@ export const actions: Actions = {
 				})
 				.returning({ id: accounts.id, name: accounts.name })
 		).at(0);
-
-		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
 
 		return data;
 	}
