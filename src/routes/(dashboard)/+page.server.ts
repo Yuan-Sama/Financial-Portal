@@ -2,6 +2,7 @@ import { accounts, insertAccountSchema } from '$lib/server/account';
 import { db } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { dev } from '$app/environment';
 
 export const load = (async () => {
 	return {};
@@ -15,6 +16,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const rawData = Object.fromEntries(formData);
 
+		// TODO: validation here
 		const values = insertAccountSchema.pick({ name: true }).parse(rawData);
 
 		const data = (
@@ -26,6 +28,8 @@ export const actions: Actions = {
 				})
 				.returning({ id: accounts.id, name: accounts.name })
 		).at(0);
+
+		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
 
 		return data;
 	}

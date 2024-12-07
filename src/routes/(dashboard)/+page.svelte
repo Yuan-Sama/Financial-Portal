@@ -6,10 +6,12 @@
 	import { AppName } from '$lib';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import type { PageData } from './$types';
+	import { toast } from '$components/Toaster.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let hide = $state(true);
 	let submitting = $state(false);
+	let counter = $state(1);
 
 	const submiteCreateAccount: SubmitFunction = ({
 		formData,
@@ -22,11 +24,12 @@
 		submitting = true;
 
 		return async ({ update, result }) => {
-			
-			await update();
+			if (result.type === 'success') {
+				await update();
+				hide = true;
+				toast.success('Account created');
+			}
 			submitting = false;
-			await new Promise((f) => setTimeout(() => (hide = true), 100));
-			// toast here
 		};
 	};
 </script>
