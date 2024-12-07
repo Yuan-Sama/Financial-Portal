@@ -1,27 +1,6 @@
-import { eq, type InferSelectModel } from 'drizzle-orm';
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
-import Joi from 'joi';
+import { eq } from 'drizzle-orm';
 import { db } from './db';
-
-export const users = sqliteTable('users', {
-	id: integer('id').primaryKey(),
-	username: text('username').notNull(),
-	password: text('password').notNull()
-});
-
-export type User = InferSelectModel<typeof users>;
-
-export const userSignInValidator = Joi.object({
-	email: Joi.string().email().required(),
-	password: Joi.string().required()
-});
-
-// TODO: check confirm password match password
-export const userSignUpValidator = Joi.object({
-	email: Joi.string().email().required(),
-	password: Joi.string().required(),
-	confirmPassword: Joi.string().required()
-});
+import { users } from './user.schema';
 
 export async function getUserByUsername(username: string) {
 	return (await db.select().from(users).where(eq(users.username, username)).limit(1)).at(0);

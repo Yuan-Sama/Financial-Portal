@@ -1,6 +1,5 @@
 import { db } from '$lib/server/db';
-import { getUserByUsername, users, userSignUpValidator } from '$lib/server/user';
-import { eq } from 'drizzle-orm';
+import { users, userSignUpValidator } from '$lib/server/user.schema';
 import type { Actions, PageServerLoad } from './$types';
 import type Joi from 'joi';
 import bcrypt from 'bcrypt';
@@ -9,6 +8,7 @@ import * as jose from 'jose';
 import { AppName } from '$lib';
 import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/auth';
 import { dev } from '$app/environment';
+import { getUserByUsername } from '$lib/server/user';
 
 export const load = (async ({ locals }) => {
 	const user = await locals.getUser();

@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { accounts, insertAccountSchema } from '$lib/server/account';
+import { accounts, insertAccountSchema } from '$lib/server/account.schema';
 import { eq } from 'drizzle-orm';
 
 export const GET: RequestHandler = async ({ locals }) => {

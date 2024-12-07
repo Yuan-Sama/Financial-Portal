@@ -1,7 +1,7 @@
 import { AppName } from '$lib';
 import { AccessTokenName, secret } from '$lib/server/auth';
 import { db } from '$lib/server/db';
-import { users } from '$lib/server/user';
+import { users } from '$lib/server/user.schema';
 import type { Handle } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import * as jose from 'jose';

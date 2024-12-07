@@ -1,4 +1,4 @@
-import { accounts, insertAccountSchema } from '$lib/server/account';
+import { accounts, insertAccountSchema } from '$lib/server/account.schema';
 import { db } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
