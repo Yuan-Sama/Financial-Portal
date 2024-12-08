@@ -128,7 +128,7 @@
 				>Name</label
 			>
 			<Input
-				class="mt-3"
+				class="mt-3 w-full"
 				placeholder="e.g. Cash, Bank, Credit Card"
 				id="name"
 				name="name"

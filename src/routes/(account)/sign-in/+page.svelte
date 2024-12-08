@@ -45,6 +45,7 @@
 			>Your email</label
 		>
 		<Input
+			class="w-full"
 			type="email"
 			name="username"
 			id="email"
@@ -58,6 +59,7 @@
 			>Password</label
 		>
 		<Input
+			class="w-full"
 			type="password"
 			name="password"
 			id="password"

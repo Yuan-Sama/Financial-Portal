@@ -47,6 +47,7 @@
 			>Your email</label
 		>
 		<Input
+			class="w-full"
 			type="email"
 			name="username"
 			id="email"
@@ -59,6 +60,7 @@
 			>Password</label
 		>
 		<Input
+			class="w-full"
 			type="password"
 			name="password"
 			id="password"
@@ -73,6 +75,7 @@
 			class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Confirm password</label
 		>
 		<Input
+			class="w-full"
 			type="password"
 			name="confirmPassword"
 			id="confirmPassword"
