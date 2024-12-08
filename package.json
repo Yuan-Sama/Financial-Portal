@@ -41,7 +41,7 @@
 		"better-sqlite3": "^11.1.2",
 		"drizzle-orm": "^0.33.0",
 		"drizzle-zod": "^0.5.1",
-		"joi": "^17.13.3",
-		"jose": "^5.9.6"
+		"jose": "^5.9.6",
+		"simple-datatables": "^9.2.1"
 	}
 }

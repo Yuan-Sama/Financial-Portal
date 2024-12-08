@@ -42,10 +42,9 @@
 
 <button
 	onclick={() => backToTop(delayMs, durationMs, easing)}
-	class="leading-0 fixed bottom-4 right-4 z-[996] flex size-10 animate-bounce items-center justify-center bg-primary-500 text-base hover:bg-primary-700 text-white/80{scrollY <=
-	showThreshold
-		? ' invisible'
-		: ''}"
+	class="leading-0 fixed bottom-4 right-4 z-[996] flex size-10 animate-bounce items-center justify-center bg-primary-500 text-base hover:bg-primary-700 text-white/80{clazz
+		? ` ${clazz}`
+		: ''}{scrollY <= showThreshold ? ' invisible' : ''}"
 	transition:fade={{ duration: 1000 }}
 	{...restProps}
 >

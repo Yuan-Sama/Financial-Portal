@@ -3,20 +3,32 @@ import { db } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { dev } from '$app/environment';
+import { eq } from 'drizzle-orm';
 
-export const load = (async () => {
-	return {};
+export const load = (async ({ parent }) => {
+	const data = await parent();
+
+	const accs = await db
+		.select({
+			id: accounts.id,
+			name: accounts.name
+		})
+		.from(accounts)
+		.where(eq(accounts.userId, data.user.id));
+
+	return {
+		accounts: accs
+	};
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
-	createAccount: async ({ request, locals }) => {
+	create: async ({ request, locals }) => {
 		const user = await locals.getUser();
 		if (!user) return fail(401, { error: 'Unauthorized' });
 
 		const formData = await request.formData();
 		const rawData = Object.fromEntries(formData);
 
-		// TODO: validation here
 		const result = insertAccountSchema.pick({ name: true }).safeParse(rawData);
 
 		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
@@ -29,16 +41,21 @@ export const actions: Actions = {
 
 		const values = result.data;
 
-		const data = (
-			await db
-				.insert(accounts)
-				.values({
-					userId: user.id,
-					...values
-				})
-				.returning({ id: accounts.id, name: accounts.name })
-		).at(0);
+		await db.insert(accounts).values({
+			userId: user.id,
+			...values
+		});
 
-		return data;
+		const accs = await db
+			.select({
+				id: accounts.id,
+				name: accounts.name
+			})
+			.from(accounts)
+			.where(eq(accounts.userId, user.id));
+
+		return {
+			accounts: accs
+		};
 	}
 };
