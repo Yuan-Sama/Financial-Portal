@@ -9,7 +9,7 @@
 	import { toast } from '$components/Toaster.svelte';
 
 	let { data }: { data: PageData } = $props();
-	let accounts = $state(data.accounts);
+	let accounts = $state(data.accounts.map((a) => Object.assign({ checked: false }, a)));
 
 	let hide = $state(true);
 	let submitting = $state(false);
@@ -36,6 +36,12 @@
 			submitting = false;
 		};
 	};
+
+	let checkedAll = $derived(
+		accounts.map((a) => a.checked).reduce((pre, cur) => (pre = pre && cur))
+	);
+	$inspect(accounts);
+	$inspect(checkedAll);
 </script>
 
 <svelte:head>
@@ -65,8 +71,9 @@
 				>Add new</Button
 			>
 		</div>
-		<div class="relative overflow-x-auto shadow-md sm:rounded-sm">
-			<div class="bg-white pb-4 dark:bg-gray-900">
+
+		<div class="flex justify-between pb-4">
+			<div class="bg-white dark:bg-gray-900">
 				<label for="table-search" class="sr-only">Search</label>
 				<div class="relative mt-1 ps-1">
 					<div
@@ -88,29 +95,86 @@
 							/>
 						</svg>
 					</div>
-					<Input type="text" class="w-80 ps-10" placeholder="Search for items" />
+					<Input type="text" class="ps-10 pt-2 lg:w-80" placeholder="Search for items" />
 				</div>
 			</div>
-			<table class="w-full border text-gray-500 dark:text-gray-400">
-				<thead class="bg-gray-100 dark:bg-gray-800">
-					<tr>
-						{#each ['', 'Name'] as column}
-							<th class="px-5 py-3 uppercase">
-								<span class="flex items-center"> {column} </span>
-							</th>
-						{/each}
-					</tr>
-				</thead>
-				<tbody>
-					{#each accounts as acc}
-						<tr class="border-b">
-							<td class="whitespace-nowrap px-5 py-3 font-medium text-gray-900 dark:text-white"
-							></td>
-							<td class="px-5 py-3">{acc.name}</td>
-						</tr>
+
+			{#if accounts.reduce((count, a) => (count += Number(a.checked)), 0) > 0}
+				<button
+					type="button"
+					class="inline-flex items-center rounded-lg border border-red-600 px-3 py-2 text-center text-sm font-medium text-red-600 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-4 focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-600 dark:hover:text-white dark:focus:ring-red-900"
+				>
+					<svg
+						class="-ml-1 mr-1 h-5 w-5"
+						fill="currentColor"
+						viewBox="0 0 20 20"
+						xmlns="http://www.w3.org/2000/svg"
+						><path
+							fill-rule="evenodd"
+							d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+							clip-rule="evenodd"
+						></path></svg
+					>
+					Delete
+				</button>
+			{/if}
+		</div>
+
+		<table
+			class="w-full overflow-x-auto border text-gray-500 shadow-md dark:text-gray-400 sm:rounded-sm"
+		>
+			<thead class="bg-gray-100 dark:bg-gray-800">
+				<tr>
+					<th scope="col" class="p-4">
+						<div class="flex items-center">
+							<input
+								id="checkbox-all-search"
+								type="checkbox"
+								checked={checkedAll}
+								onchange={($event) => {
+									accounts.map((a) => (a.checked = $event.currentTarget.checked));
+								}}
+								class="h-4 w-4 cursor-pointer rounded-lg border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
+								aria-label="Select all"
+							/>
+							<label for="checkbox-all-search" class="sr-only">checkbox</label>
+						</div>
+					</th>
+					{#each ['Name'] as column}
+						<th scope="col" class="px-5 py-3 uppercase">
+							<span class="flex items-center"> {column} </span>
+						</th>
 					{/each}
-				</tbody>
-			</table>
+				</tr>
+			</thead>
+			<tbody>
+				{#each accounts as acc, idx}
+					<tr
+						class="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
+					>
+						<td class="w-4 p-4">
+							<div class="flex items-center">
+								<input
+									id="checkbox-table-search-1"
+									type="checkbox"
+									bind:checked={acc.checked}
+									class="h-4 w-4 cursor-pointer rounded-lg border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600 dark:focus:ring-offset-gray-800"
+								/>
+								<label for="checkbox-table-search-1" class="sr-only">checkbox</label>
+							</div>
+						</td>
+						<td class="px-5 py-3">{acc.name}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+
+		<div class="flex-column flex flex-wrap items-center justify-between pt-4 md:flex-row">
+			<span
+				class="mb-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:mb-0 md:inline md:w-auto"
+				>{accounts.reduce((count, a) => (count += Number(a.checked)), 0)} of {accounts.length} row(s)
+				selected.</span
+			>
 		</div>
 	</div>
 </div>
