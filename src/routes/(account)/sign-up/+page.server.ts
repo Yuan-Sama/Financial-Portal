@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { signUpSchema, users } from '$lib/server/user.schema';
-import type { Actions, PageServerLoad } from './$types';
+import type { Actions } from './$types';
 import bcrypt from 'bcrypt';
 import { fail, redirect } from '@sveltejs/kit';
 import * as jose from 'jose';
@@ -9,13 +9,6 @@ import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/aut
 import { dev } from '$app/environment';
 import { getUserByUsername } from '$lib/server/user';
 
-export const load = (async ({ locals }) => {
-	const user = await locals.getUser();
-	if (user) redirect(303, '/');
-
-	return {};
-}) satisfies PageServerLoad;
-
 const saltRounds = 12;
 
 export const actions: Actions = {
@@ -23,11 +16,15 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const rawData = Object.fromEntries(formData);
 
-		const result = signUpSchema.safeParse(rawData);
+		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000)); // Stimulate long request
 
+		const result = signUpSchema.safeParse(rawData);
 		if (result.error) {
-			console.error(result.error);
-			return fail(400, { error: 'Something wrong with sign up' });
+			const validationErrors = result.error.errors.reduce(
+				(obj, e) => Object.assign(obj, { [e.path[0]]: e.message }),
+				{}
+			);
+			return fail(400, { validationErrors });
 		}
 
 		const existedUser = await getUserByUsername(result.data.username);
@@ -55,6 +52,10 @@ export const actions: Actions = {
 				.setExpirationTime(Math.floor(lifeTimeInSeconds / 1000))
 				.sign(secret);
 
+			cookies.delete(AccessTokenName, {
+				path: '/'
+			});
+
 			cookies.set(AccessTokenName, accessToken, {
 				secure: !dev,
 				path: '/',
@@ -63,9 +64,9 @@ export const actions: Actions = {
 			});
 		} catch (err) {
 			console.error(err);
-			return {
+			return fail(400, {
 				error: 'Unknown error happens during sign up'
-			};
+			});
 		}
 
 		const returnTo = url.searchParams.get('returnTo');

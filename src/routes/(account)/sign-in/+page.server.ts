@@ -1,4 +1,4 @@
-import type { Actions, PageServerLoad } from './$types';
+import type { Actions } from './$types';
 import bcrypt from 'bcrypt';
 import { fail, redirect } from '@sveltejs/kit';
 import * as jose from 'jose';
@@ -7,13 +7,6 @@ import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/aut
 import { dev } from '$app/environment';
 import { getUserByUsername } from '$lib/server/user';
 import { signInSchema } from '$lib/server/user.schema';
-
-export const load = (async ({ locals }) => {
-	const user = await locals.getUser();
-	if (user) redirect(303, '/');
-
-	return {};
-}) satisfies PageServerLoad;
 
 async function signIn(username: string, password: string) {
 	const user = await getUserByUsername(username);
@@ -32,7 +25,8 @@ export const actions: Actions = {
 
 		const result = signInSchema.safeParse(rawData);
 
-		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+		if (dev)
+			await new Promise((fullfill) => setTimeout(fullfill, Math.floor(Math.random() * 2001))); // Stimulate long request
 
 		if (result.error) return fail(400, { error: 'Email or password incorrect' });
 
@@ -46,6 +40,10 @@ export const actions: Actions = {
 			.setAudience(AppName)
 			.setExpirationTime(Math.floor(lifeTimeInSeconds / 1000))
 			.sign(secret);
+
+		cookies.delete(AccessTokenName, {
+			path: '/'
+		});
 
 		cookies.set(AccessTokenName, accessToken, {
 			secure: !dev,

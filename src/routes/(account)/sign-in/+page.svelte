@@ -4,28 +4,14 @@
 	import Button from '$components/Button.svelte';
 	import ButtonLoader from '$components/ButtonLoader.svelte';
 	import Input from '$components/Input.svelte';
+	import Label from '$components/Label.svelte';
 	import { toastr } from '$components/Toastr.svelte';
 	import { AppName } from '$lib';
-	import type { SubmitFunction } from '@sveltejs/kit';
 
-	let searchParams = $page.url.searchParams;
-	let params = searchParams.size ? `?${searchParams}` : '';
+	const { searchParams } = $page.url;
+	const params = searchParams.size ? `?${searchParams}` : '';
 
 	let submitting = $state(false);
-
-	const signIn: SubmitFunction = async ({}) => {
-		submitting = true;
-
-		return async ({ result }) => {
-			if (result.type === 'failure') {
-				toastr.error(result.data?.error);
-			} else if (result.type === 'redirect') {
-				toastr.success('Welcome back');
-				await applyAction(result);
-			}
-			submitting = false;
-		};
-	};
 </script>
 
 <svelte:head>
@@ -40,11 +26,25 @@
 
 <p class="text-center text-base text-gray-400">Welcome back! Please sign in to continue</p>
 
-<form class="space-y-4 md:space-y-6" method="post" use:enhance={signIn}>
+<form
+	class="space-y-4 md:space-y-6"
+	method="post"
+	use:enhance={async () => {
+		submitting = true;
+
+		return async ({ result }) => {
+			if (result.type === 'failure') {
+				toastr.error(result.data?.error);
+				submitting = false;
+				return;
+			}
+			toastr.success('Welcome back');
+			await applyAction(result);
+		};
+	}}
+>
 	<div>
-		<label for="email" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-			>Your email</label
-		>
+		<Label for="email">Your email</Label>
 		<Input
 			class="w-full"
 			type="email"
@@ -56,9 +56,7 @@
 		/>
 	</div>
 	<div>
-		<label for="password" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-			>Password</label
-		>
+		<Label for="password">Password</Label>
 		<Input
 			class="w-full"
 			type="password"
@@ -69,7 +67,7 @@
 			disabled={submitting}
 		/>
 	</div>
-	<Button color="primary" class="w-full" type="submit" disabled={submitting}
+	<Button color="primary" class="w-full font-medium" type="submit" bind:disabled={submitting}
 		><ButtonLoader bind:show={submitting} />Sign in</Button
 	>
 	<p class="text-sm font-light text-gray-500 dark:text-gray-400">

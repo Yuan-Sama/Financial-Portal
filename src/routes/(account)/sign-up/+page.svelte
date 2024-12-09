@@ -4,28 +4,20 @@
 	import Button from '$components/Button.svelte';
 	import ButtonLoader from '$components/ButtonLoader.svelte';
 	import Input from '$components/Input.svelte';
+	import Label from '$components/Label.svelte';
 	import { toastr } from '$components/Toastr.svelte';
 	import { AppName } from '$lib';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import type { ActionData } from './$types';
 
 	const { searchParams } = $page.url;
 	const params = searchParams.size ? `?${searchParams}` : '';
 
+	let { form }: { form: ActionData } = $props();
+
 	let submitting = $state(false);
 
-	const signUp: SubmitFunction = async ({}) => {
-		submitting = true;
-
-		return async ({ result }) => {
-			if (result.type === 'failure') {
-				// TODO: use form validation instead
-			} else if (result.type === 'redirect') {
-				toastr.success('Welcome');
-				await applyAction(result);
-			}
-			submitting = false;
-		};
-	};
+	$inspect(form);
+	$inspect(submitting);
 </script>
 
 <svelte:head>
@@ -42,11 +34,32 @@
 	Welcome! Please fill in the details to get started
 </p>
 
-<form class="space-y-4 md:space-y-6" method="POST" use:enhance={signUp}>
+<form
+	class="space-y-4 md:space-y-6"
+	method="POST"
+	use:enhance={async () => {
+		submitting = true;
+
+		return async ({ result }) => {
+			if (result.type === 'failure') {
+				if (result.data?.validationErrors) {
+					submitting = false;
+					await applyAction(result);
+					return;
+				}
+
+				submitting = false;
+				toastr.error(result.data?.error);
+				return;
+			}
+
+			toastr.success('Welcome');
+			await applyAction(result);
+		};
+	}}
+>
 	<div>
-		<label for="email" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-			>Your email</label
-		>
+		<Label for="email">Your email</Label>
 		<Input
 			class="w-full"
 			type="email"
@@ -57,35 +70,28 @@
 		/>
 	</div>
 	<div>
-		<label for="password" class="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-			>Password</label
-		>
+		<Label for="password">Password</Label>
 		<Input
 			class="w-full"
 			type="password"
 			name="password"
 			id="password"
 			placeholder="••••••••"
-			required
 			disabled={submitting}
 		/>
 	</div>
 	<div>
-		<label
-			for="confirmPassword"
-			class="mb-2 block text-sm font-medium text-gray-900 dark:text-white">Confirm password</label
-		>
+		<Label for="confirmPassword">Confirm password</Label>
 		<Input
 			class="w-full"
 			type="password"
 			name="confirmPassword"
 			id="confirmPassword"
 			placeholder="••••••••"
-			required
 			disabled={submitting}
 		/>
 	</div>
-	<Button class="w-full" type="submit" disabled={submitting} color="primary"
+	<Button class="w-full font-medium" type="submit" bind:disabled={submitting} color="primary"
 		><ButtonLoader bind:show={submitting} />Create an account</Button
 	>
 	<p class="text-sm font-light text-gray-500 dark:text-gray-400">
