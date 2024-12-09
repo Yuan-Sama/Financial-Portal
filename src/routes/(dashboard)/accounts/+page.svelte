@@ -6,7 +6,7 @@
 	import { AppName } from '$lib';
 	import type { SubmitFunction } from '@sveltejs/kit';
 	import type { PageData } from './$types';
-	import { toast } from '$components/Toaster.svelte';
+	import { toastr } from '$components/Toastr.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let accounts = $state(data.accounts.map((a) => Object.assign({ checked: false }, a)));
@@ -29,9 +29,9 @@
 				await update();
 				accounts = result.data?.accounts;
 				hide = true;
-				toast.success('Account created');
+				toastr.success('Account created');
 			} else if (result.type === 'failure') {
-				toast.error(result.data?.error);
+				toastr.error(result.data?.error);
 			}
 			submitting = false;
 		};
@@ -58,7 +58,7 @@
 			</span>
 			<Button
 				class="flex items-center justify-center bg-primary-600 text-white hover:bg-primary-700"
-				size="small"
+				size="sm"
 				onclick={() => (hide = false)}
 				><svg
 					class="mr-2 size-4"

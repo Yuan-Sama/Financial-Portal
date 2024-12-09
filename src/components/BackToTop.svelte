@@ -1,52 +1,48 @@
-<script lang="ts">
-	import type { Snippet } from 'svelte';
-	import { expoInOut } from 'svelte/easing';
-	import type { HTMLButtonAttributes } from 'svelte/elements';
-	import { tweened } from 'svelte/motion';
+<script>
+	import { Tween } from 'svelte/motion';
 	import { fade } from 'svelte/transition';
-
-	let {
-		class: clazz = '',
-		delayMs = 0,
-		durationMs = 1000,
-		showThreshold = 100,
-		easing = expoInOut,
-		children = undefined,
-		...restProps
-	}: {
-		class?: string;
-		children?: Snippet;
-		delayMs?: number;
-		durationMs?: number;
-		showThreshold?: number;
-		easing?: (t: number) => number;
-	} & HTMLButtonAttributes = $props();
+	import Button from './Button.svelte';
+	import { expoInOut } from 'svelte/easing';
 
 	let scrollY = $state(0);
-	const tweeny = tweened(0);
+	let showAtPx = 100;
 
-	async function backToTop(delay: number, duration: number, easing: (t: number) => number) {
-		tweeny.set(scrollY, { duration: 0 });
+	const tween = new Tween(0, {
+		delay: 0,
+		easing: expoInOut
+	});
 
-		const unsubscribe = tweeny.subscribe((value) => {
-			window.scrollTo(0, value);
-		});
+	$effect(() => window.scrollTo(0, tween.current));
 
-		await tweeny.set(0, { delay, duration, easing });
-
-		return unsubscribe();
+	async function scrollToTop() {
+		await tween.set(scrollY, { duration: 0 });
+		await tween.set(0, { duration: 1000 });
 	}
 </script>
 
 <svelte:window bind:scrollY />
 
-<button
-	onclick={() => backToTop(delayMs, durationMs, easing)}
-	class="leading-0 fixed bottom-4 right-4 z-[996] flex size-10 animate-bounce items-center justify-center bg-primary-500 text-base hover:bg-primary-700 text-white/80{clazz
-		? ` ${clazz}`
-		: ''}{scrollY <= showThreshold ? ' invisible' : ''}"
-	transition:fade={{ duration: 1000 }}
-	{...restProps}
->
-	{@render children?.()}
-</button>
+{#if scrollY > showAtPx}
+	<div class="fixed bottom-4 right-4 z-[996]" transition:fade={{ duration: 700 }}>
+		<Button
+			class="leading-0  flex size-10 animate-bounce items-center justify-center"
+			color="primary"
+			shape="round"
+			outline={true}
+			onclick={() => scrollToTop()}
+		>
+			<span>
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					style="fill: currentColor;"
+					><path d="m12 3.879-7.061 7.06 2.122 2.122L12 8.121l4.939 4.94 2.122-2.122z"></path><path
+						d="m4.939 17.939 2.122 2.122L12 15.121l4.939 4.94 2.122-2.122L12 10.879z"
+					></path></svg
+				>
+			</span>
+		</Button>
+	</div>
+{/if}

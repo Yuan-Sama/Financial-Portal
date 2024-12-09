@@ -14,4 +14,4 @@ const tempDate = new Date();
 /**
  * the seconds value in the Date object using local time.
  */
-export const lifeTimeInSeconds = tempDate.setSeconds(tempDate.getSeconds() + 7200);
+export const lifeTimeInSeconds = tempDate.setSeconds(tempDate.getSeconds() + 3600);

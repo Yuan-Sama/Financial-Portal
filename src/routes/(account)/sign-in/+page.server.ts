@@ -32,6 +32,8 @@ export const actions: Actions = {
 
 		const result = signInSchema.safeParse(rawData);
 
+		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+
 		if (result.error) return fail(400, { error: 'Email or password incorrect' });
 
 		const user = await signIn(result.data.username, result.data.password);
