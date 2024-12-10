@@ -37,11 +37,12 @@
 		};
 	};
 
-	let checkedAll = $derived(
-		accounts.map((a) => a.checked).reduce((pre, cur) => (pre = pre && cur))
-	);
-	$inspect(accounts);
-	$inspect(checkedAll);
+	let checkedAll = $derived.by(() => {
+		if (!accounts.length) return false;
+		return accounts.map((a) => a.checked).reduce((pre, cur) => (pre = pre && cur));
+	});
+	// $inspect(accounts);
+	// $inspect(checkedAll);
 </script>
 
 <svelte:head>

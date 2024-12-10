@@ -2,9 +2,9 @@
 	import { applyAction, enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import Button from '$components/Button.svelte';
-	import ButtonLoader from '$components/ButtonLoader.svelte';
 	import Input from '$components/Input.svelte';
 	import Label from '$components/Label.svelte';
+	import Spinner from '$components/Spinner.svelte';
 	import { toastr } from '$components/Toastr.svelte';
 	import { AppName } from '$lib';
 
@@ -67,8 +67,12 @@
 			disabled={submitting}
 		/>
 	</div>
-	<Button color="primary" class="w-full font-medium" type="submit" bind:disabled={submitting}
-		><ButtonLoader bind:show={submitting} />Sign in</Button
+	<Button class="w-full font-medium" type="submit" bind:disabled={submitting}
+		>{#if submitting}
+			<div role="status" class="me-2 inline">
+				<Spinner inline />
+			</div>
+		{/if} Sign in</Button
 	>
 	<p class="text-sm font-light text-gray-500 dark:text-gray-400">
 		Don’t have an account yet? <a

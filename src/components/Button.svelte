@@ -2,24 +2,15 @@
 	import clsx from 'clsx';
 
 	/**
-	 * @type {{
-	 * 	color?: 'default' | 'red' | 'primary',
-	 * 	size?: 'xs' | 'sm' | 'base' | 'lg' | 'xl',
-	 * 	shape?: 'default' | 'pill' | 'round',
-	 *  outline?: boolean,
-	 * 	disabled?: boolean,
-	 * 	children: import('svelte').Snippet
-	 * } & import('svelte/elements').HTMLButtonAttributes}
+	 * @typedef Size
+	 * @type {"base" | "xs" | "sm" | "lg" | "xl"}
+	 *
+	 * @typedef Color
+	 * @type {"primary" | "red"}
+	 *
+	 * @typedef Shape
+	 * @type {"default" | "pill" | "round"}
 	 */
-	let {
-		color = 'default',
-		size = 'base',
-		shape = 'default',
-		outline = false,
-		disabled = $bindable(false),
-		children,
-		...restProps
-	} = $props();
 
 	const sizes = {
 		xs: 'xs',
@@ -31,7 +22,6 @@
 
 	const colors = {
 		primary: 'primary',
-		default: 'default',
 		red: 'red'
 	};
 
@@ -42,26 +32,28 @@
 	};
 
 	/**
-	 * @param {{ [x: string]: any }} obj
-	 * @param {any} defaultValue
-	 * @param {any} value
+	 * @type {{
+	 * 	color?: Color,
+	 * 	size?: Size,
+	 * 	shape?: Shape,
+	 *  outline?: boolean,
+	 * 	disabled?: boolean,
+	 * 	children: import('svelte').Snippet
+	 * } & import('svelte/elements').HTMLButtonAttributes}
 	 */
-	function getCurrentOrDefault(obj, defaultValue, value) {
-		if (Object.values(obj).includes(value)) return value;
-		return defaultValue;
-	}
+	let {
+		color = 'primary',
+		size = 'base',
+		shape = 'default',
+		outline = false,
+		disabled = $bindable(false),
+		children,
+		...restProps
+	} = $props();
 
-	/**
-	 * @param {any} a
-	 * @param {any} b
-	 */
-	function match(a, b) {
-		return a === b;
-	}
-
-	size = getCurrentOrDefault(sizes, sizes.base, size);
-	color = getCurrentOrDefault(colors, colors.default, color);
-	shape = getCurrentOrDefault(shapes, shapes.default, shape);
+	size = /** @type {Size} */ (sizes[size] ?? sizes.base);
+	color = /** @type {Color} */ (colors[color] ?? colors.primary);
+	shape = /** @type {Shape} */ (shapes[shape] ?? shapes.default);
 </script>
 
 <button
@@ -70,19 +62,15 @@
 		'focus:outline-none',
 		!disabled && 'focus:ring-4',
 		disabled && 'cursor-not-allowed focus:ring-0',
-		[
-			match(size, sizes.xs) && 'px-3 py-2 text-xs',
-			match(size, sizes.sm) && 'px-3 py-2 text-sm',
-			match(size, sizes.base) && 'px-5 py-2.5 text-sm',
-			match(size, sizes.lg) && 'px-5 py-3 text-base',
-			match(size, sizes.xl) && 'px-6 py-3.5 text-base'
-		],
-		[
-			match(shape, shapes.default) && 'rounded-lg',
-			match(shape, shapes.pill) && 'rounded-full',
-			match(shape, shapes.round) && 'rounded-[50%]'
-		],
-		match(color, colors.primary) && [
+		sizes.xs === size && 'px-3 py-2 text-xs',
+		sizes.sm === size && 'px-3 py-2 text-sm',
+		sizes.base === size && 'px-5 py-2.5 text-sm',
+		sizes.lg === size && 'px-5 py-3 text-base',
+		sizes.xl === size && 'px-6 py-3.5 text-base',
+		shapes.default === shape && 'rounded-lg',
+		shapes.pill === shape && 'rounded-full',
+		shapes.round === shape && 'rounded-[50%]',
+		colors.primary === color && [
 			disabled && [
 				outline &&
 					'border border-primary-400 text-primary-400 dark:border-primary-500 dark:text-primary-500',
@@ -95,7 +83,7 @@
 					'bg-primary-700 text-white hover:bg-primary-800 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
 			]
 		],
-		match(color, colors.red) && [
+		colors.red === color && [
 			disabled && [
 				outline && 'border border-red-400 text-red-400 dark:border-red-500 dark:text-red-500',
 				!outline && 'bg-red-400 text-white dark:bg-red-500'
@@ -105,18 +93,6 @@
 					'border border-red-700 text-red-700 hover:bg-red-800 hover:text-white focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-500 dark:hover:text-white dark:focus:ring-red-800',
 				!outline &&
 					'bg-red-700 text-white hover:bg-red-800 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800'
-			]
-		],
-		match(color, colors.default) && [
-			disabled && [
-				outline && 'border border-blue-400 text-blue-400 dark:border-blue-500 dark:text-blue-500',
-				!outline && 'bg-blue-400 text-white dark:bg-blue-500'
-			],
-			!disabled && [
-				outline &&
-					'border border-blue-700 text-blue-700 hover:bg-blue-800 hover:text-white focus:ring-blue-300 dark:border-blue-500 dark:text-blue-500 dark:hover:bg-blue-500 dark:hover:text-white dark:focus:ring-blue-800',
-				!outline &&
-					'bg-blue-700 text-white hover:bg-blue-800 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'
 			]
 		],
 		restProps.class

@@ -23,14 +23,16 @@ export const actions: Actions = {
 			const validationErrors = result.error.errors.reduce(
 				(obj, e) => Object.assign(obj, { [e.path[0]]: e.message }),
 				{}
-			);
+			) as { username?: string; password?: string; confirmPassword?: string };
 			return fail(400, { validationErrors });
 		}
 
 		const existedUser = await getUserByUsername(result.data.username);
 		if (existedUser)
 			return fail(400, {
-				error: 'User exists'
+				validationErrors: {
+					username: 'User exists'
+				} as { username?: string; password?: string; confirmPassword?: string }
 			});
 
 		try {
