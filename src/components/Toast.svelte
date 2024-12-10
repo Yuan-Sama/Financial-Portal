@@ -11,7 +11,7 @@
 </script>
 
 <div
-	class="flex w-96 max-w-sm items-center rounded-lg bg-gray-400 p-4 shadow-lg dark:bg-gray-700 dark:text-gray-200"
+	class="flex w-96 max-w-sm items-center rounded-lg bg-white p-4 shadow-2xl dark:bg-gray-700 dark:text-gray-200"
 	role="alert"
 >
 	<div
@@ -86,7 +86,7 @@
 	{#if removeFn}
 		<button
 			type="button"
-			class="-mx-1.5 -my-1.5 ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gray-400 p-1.5 hover:bg-gray-100 hover:text-gray-900 focus:ring-2 focus:ring-gray-300 dark:bg-gray-700 dark:text-gray-500 dark:hover:bg-gray-600 dark:hover:text-white"
+			class="-mx-1.5 -my-1.5 ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-white p-1.5 hover:bg-gray-100 hover:text-gray-900 focus:ring-2 focus:ring-gray-300 dark:bg-gray-700 dark:text-gray-500 dark:hover:bg-gray-600 dark:hover:text-white"
 			aria-label="Close"
 			onclick={() => removeFn(id)}
 		>

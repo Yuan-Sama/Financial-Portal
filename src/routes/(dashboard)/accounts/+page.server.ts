@@ -3,7 +3,8 @@ import { db } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { dev } from '$app/environment';
-import { eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
+import { z } from 'zod';
 
 export const load = (async ({ parent }) => {
 	const data = await parent();
@@ -56,6 +57,35 @@ export const actions: Actions = {
 
 		return {
 			accounts: accs
+		};
+	},
+
+	delete: async ({ request, locals }) => {
+		const user = await locals.getUser();
+		if (!user) return fail(401, { error: 'Unauthorized' });
+
+		const formData = await request.formData();
+		const rawData = Object.fromEntries(formData) as { ids: string };
+
+		const result = z.number().array().safeParse(JSON.parse(rawData.ids).map(Number));
+
+		// if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+
+		if (result.error) {
+			return fail(400, {
+				error: result.error.errors[0].message
+			});
+		}
+
+		const data = await db
+			.delete(accounts)
+			.where(and(eq(accounts.userId, user.id), inArray(accounts.id, result.data)))
+			.returning({
+				id: accounts.id
+			});
+
+		return {
+			deletedAccounts: data.map((a) => a.id)
 		};
 	}
 };

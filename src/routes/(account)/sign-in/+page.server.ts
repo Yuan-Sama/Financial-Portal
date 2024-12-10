@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { fail, redirect } from '@sveltejs/kit';
 import * as jose from 'jose';
 import { AppName } from '$lib';
-import { AccessTokenName, alg, lifeTimeInSeconds, secret } from '$lib/server/auth';
+import { AccessTokenName, alg, secret } from '$lib/server/auth';
 import { dev } from '$app/environment';
 import { getUserByUsername } from '$lib/server/user';
 import { signInSchema } from '$lib/server/user.schema';
@@ -33,23 +33,21 @@ export const actions: Actions = {
 		const user = await signIn(result.data.username, result.data.password);
 		if (!user) return fail(400, { error: 'Email or password incorrect' });
 
+		const lifeTimeMillis = Date.now() + 3600 * 1000;
+
 		const accessToken = await new jose.SignJWT({ id: user.id })
 			.setProtectedHeader({ alg })
 			.setIssuedAt()
 			.setIssuer(AppName)
 			.setAudience(AppName)
-			.setExpirationTime(Math.floor(lifeTimeInSeconds / 1000))
+			.setExpirationTime(Math.floor(lifeTimeMillis / 1000))
 			.sign(secret);
-
-		cookies.delete(AccessTokenName, {
-			path: '/'
-		});
 
 		cookies.set(AccessTokenName, accessToken, {
 			secure: !dev,
 			path: '/',
 			httpOnly: !dev,
-			expires: new Date(lifeTimeInSeconds)
+			expires: new Date(lifeTimeMillis)
 		});
 
 		const returnTo = url.searchParams.get('returnTo');

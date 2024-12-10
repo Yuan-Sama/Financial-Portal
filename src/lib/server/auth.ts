@@ -9,9 +9,3 @@ export const secret = new TextEncoder().encode(
  * @see {@link https://github.com/panva/jose/issues/210#jws-alg Algorithm Key Requirements}
  */
 export const alg = 'HS256';
-
-const tempDate = new Date();
-/**
- * the seconds value in the Date object using local time.
- */
-export const lifeTimeInSeconds = tempDate.setSeconds(tempDate.getSeconds() + 3600);

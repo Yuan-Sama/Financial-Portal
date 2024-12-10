@@ -23,7 +23,7 @@
 	 *  size?: Size,
 	 *  color?: Color,
 	 *  inline?: boolean,
-	 *  ScreenReader?: import('svelte').Snippet
+	 *  ScreenReader?: string
 	 * }}
 	 */
 	let {
@@ -59,8 +59,4 @@
 	/>
 </svg>
 
-{#if ScreenReader}
-	{@render ScreenReader()}
-{:else}
-	<span class="sr-only">Loading...</span>
-{/if}
+<span class="sr-only">{ScreenReader ?? 'Loading...'}</span>
