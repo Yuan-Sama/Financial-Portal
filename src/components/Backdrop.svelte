@@ -1,0 +1,1 @@
+<div class="fixed inset-0 z-30 bg-gray-900/50 dark:bg-gray-900/80"></div>
