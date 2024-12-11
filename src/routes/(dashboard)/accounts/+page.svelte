@@ -166,7 +166,7 @@
 <SideBar bind:show outsideclose direction="right" class="w-full lg:max-w-md">
 	<SideBarCloseButton onclick={() => (show = false)} left />
 
-	<div class="overflow-y-auto py-7">
+	<div class="overflow-y-auto px-3 py-7">
 		<SideBarHeading textCenter>{AppName}</SideBarHeading>
 
 		<SideBarSubHeading>Create a new account to track your transactions.</SideBarSubHeading>
@@ -181,7 +181,7 @@
 						toastr.success('Account created');
 						accounts = result.data?.accounts as { id: number; name: string }[];
 						await update();
-						show = true;
+						show = false;
 					} else if (result.type === 'failure') {
 						toastr.error(result.data?.error);
 					}

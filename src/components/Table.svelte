@@ -26,14 +26,14 @@
 	<thead class="bg-gray-100 dark:bg-gray-800">
 		<tr>
 			{@render startHeadCol?.()}
-			{#each columns as column}
+			{#each columns as column (column)}
 				{@render headCol?.(column)}
 			{/each}
 			{@render endHeadCol?.()}
 		</tr>
 	</thead>
 	<tbody>
-		{#each data as d}
+		{#each data as d (d)}
 			<tr
 				class="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
 			>
