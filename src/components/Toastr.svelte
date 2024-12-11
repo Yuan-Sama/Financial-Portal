@@ -101,7 +101,7 @@
 	 *      removeFn: (id: string | number | NodeJS.Timeout) => void,
 	 * 		pushFrom: string
 	 * 	]>
-	 * } & import('svelte/elements').HTMLAttributes<HTMLDivElement>}
+	 * } & import('svelte/elements').SvelteHTMLElements['div']}
 	 */
 	let { maxQueueSize = 5, pushFrom = 'top', delayRemoveMs = 5000, toast, ...restProps } = $props();
 

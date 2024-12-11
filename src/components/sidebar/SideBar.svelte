@@ -1,65 +1,54 @@
-<script>
-	import clsx from 'clsx';
+<script lang="ts">
+	type Direction = 'left' | 'right';
 
-	/**
-	 * @typedef Direction
-	 * @type {"left" | "right"}
-	 */
+	import clsx from 'clsx';
+	import type { Snippet } from 'svelte';
+	import type { SvelteHTMLElements } from 'svelte/elements';
 
 	const directions = {
 		left: 'left',
 		right: 'right'
 	};
 
-	/**
-	 * @type {{
-	 *  direction?: Direction,
-	 *  show?: boolean,
-	 * 	triggerId?: string,
-	 *  children: import('svelte').Snippet
-	 * }}
-	 */
-	let { direction = 'left', show = $bindable(true), triggerId = '', children } = $props();
+	let {
+		direction = 'left',
+		show = $bindable(true),
+		outsideclose = false,
+		children,
+		...restProps
+	}: {
+		direction?: Direction;
+		show?: boolean;
+		outsideclose?: boolean;
+		children: Snippet;
+	} & SvelteHTMLElements['div'] = $props();
 
-	direction = /** @type {Direction} */ (directions[direction] ?? directions.left);
+	direction = (directions[direction] ?? directions.left) as Direction;
 
-	/**
-	 * @param {HTMLDivElement} node
-	 */
-	function clickOutsideFn(node) {
-		/**
-		 * @param {MouseEvent} event
-		 */
-		function onclick(event) {
-			const target = /** @type {HTMLElement} */ (event.target);
-			if (!node.contains(target) && !target.closest(triggerId)) {
-				show = false;
-			}
-		}
-
-		document.body.addEventListener('click', onclick, true);
-
-		return {
-			destroy() {
-				document.body.removeEventListener('click', onclick);
-			}
-		};
+	function onOutsideClose(event: MouseEvent & { currentTarget: EventTarget & HTMLSpanElement }) {
+		const target = event.target;
+		if (outsideclose && target === event.currentTarget) show = false; // close on click outside
 	}
 </script>
 
 <div
-	use:clickOutsideFn
+	{...restProps}
+	role="tab"
 	class={clsx(
-		'fixed top-0 h-screen w-full overflow-y-auto bg-white p-4 transition-transform duration-500 dark:bg-gray-800 lg:max-w-md',
+		'fixed top-0 h-screen overflow-y-auto bg-white p-4 transition-transform duration-500 dark:bg-gray-800',
 		show && 'z-40 transition-none',
 		direction === directions.left && 'left-0',
 		!show && direction === directions.left && '-translate-x-full',
 		direction === directions.right && 'right-0',
-		!show && direction === directions.right && 'translate-x-full'
+		!show && direction === directions.right && 'translate-x-full',
+		restProps.class
 	)}
 	tabindex="-1"
 >
 	{@render children()}
 </div>
-<span class={clsx('inset-0 bg-gray-900/50 dark:bg-gray-900/80', show && 'fixed', !show && 'hidden')}
+<span
+	role="none"
+	onmousedown={onOutsideClose}
+	class={clsx('inset-0 bg-gray-900/50 dark:bg-gray-900/80', show && 'fixed', !show && 'hidden')}
 ></span>

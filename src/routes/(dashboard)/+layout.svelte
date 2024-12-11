@@ -4,7 +4,9 @@
 	import type { LayoutData } from './$types';
 	import { AppName } from '$lib';
 	import { page } from '$app/stores';
-	import OffCanvasSidebar from '$components/OffCanvasSidebar.svelte';
+	import SideBar from '$components/sidebar/SideBar.svelte';
+	import SideBarHeading from '$components/sidebar/SideBarHeading.svelte';
+	import SideBarCloseButton from '$components/sidebar/SideBarCloseButton.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -33,7 +35,7 @@
 
 	const userRoutes: { href: string; label: string }[] = [];
 
-	let mobileNavHidden = $state(true);
+	let show = $state(false);
 	let userMenuHidden = $state(true);
 	let userMenuInstance: HTMLDivElement;
 
@@ -77,8 +79,8 @@
 					<button
 						type="button"
 						class="inline-flex h-10 w-10 items-center justify-center rounded-lg p-2 text-sm text-white outline-none hover:bg-white/20 focus:bg-white/30 focus-visible:ring-transparent focus-visible:ring-offset-0"
-						aria-expanded={!mobileNavHidden}
-						onclick={() => (mobileNavHidden = false)}
+						aria-expanded={show}
+						onclick={() => (show = true)}
 					>
 						<span class="sr-only">Open main menu</span>
 						<svg
@@ -98,12 +100,9 @@
 						</svg>
 					</button>
 
-					<OffCanvasSidebar bind:hide={mobileNavHidden} class="w-3/4 md:w-1/2">
-						{#snippet header()}
-							<h5 class="text-base font-semibold uppercase text-gray-500 dark:text-gray-400">
-								{AppName}
-							</h5>
-						{/snippet}
+					<SideBar bind:show class="w-3/4 md:w-1/2">
+						<SideBarHeading>{AppName}</SideBarHeading>
+						<SideBarCloseButton onclick={() => (show = false)} />
 
 						<div class="overflow-y-auto py-4">
 							<ul class="space-y-2 font-medium">
@@ -122,7 +121,7 @@
 								{/each}
 							</ul>
 						</div>
-					</OffCanvasSidebar>
+					</SideBar>
 				</nav>
 			</div>
 
@@ -179,6 +178,7 @@
 		</div>
 	</div>
 </header>
+
 <main class="px-3 dark:text-white lg:px-14">
 	{@render children()}
 </main>

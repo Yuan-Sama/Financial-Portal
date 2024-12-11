@@ -1,14 +1,19 @@
-<script>
-	/**
-	 * @type {import('svelte/elements').HTMLButtonAttributes}
-	 */
-	let { ...restProps } = $props();
+<script lang="ts">
+	import clsx from 'clsx';
+	import type { HTMLButtonAttributes } from 'svelte/elements';
+
+	let { left = false, ...restProps }: { left?: boolean } & HTMLButtonAttributes = $props();
 </script>
 
 <button
 	{...restProps}
 	type="button"
-	class="absolute end-2.5 top-2.5 inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+	class={clsx(
+		'absolute top-2.5 inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white',
+		!left && 'end-2.5',
+		left && 'start-2.5',
+		restProps.class
+	)}
 >
 	<svg
 		aria-hidden="true"
