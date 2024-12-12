@@ -136,6 +136,35 @@ export const actions: Actions = {
 		if (!user) return fail(401, { error: 'Unauthorized' });
 
 		const formData = await request.formData();
+		const rawData = Object.fromEntries(formData) as { id: string };
+
+		const result = z.coerce.number().safeParse(rawData.id);
+
+		// if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+
+		if (result.error) {
+			return fail(400, {
+				error: result.error.errors[0].message
+			});
+		}
+
+		const data = await db
+			.delete(accounts)
+			.where(and(eq(accounts.userId, user.id), eq(accounts.id, result.data)))
+			.returning({
+				id: accounts.id
+			});
+
+		return {
+			deletedAccounts: data.map((a) => a.id)
+		};
+	},
+
+	deleteBulk: async ({ request, locals }) => {
+		const user = await locals.getUser();
+		if (!user) return fail(401, { error: 'Unauthorized' });
+
+		const formData = await request.formData();
 		const rawData = Object.fromEntries(formData) as { ids: string };
 
 		const result = z.number().array().safeParse(JSON.parse(rawData.ids).map(Number));

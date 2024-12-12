@@ -12,6 +12,8 @@
 	} from '$components/sidebars';
 	import { Input, Label } from '$components/forms';
 	import { toastr } from '$components/toasts';
+	import DeleteButton from '$components/tables/DeleteButton.svelte';
+	import type { ActionResult } from '@sveltejs/kit';
 
 	let { data }: { data: PageData } = $props();
 	let accounts = $state(data.accounts);
@@ -30,7 +32,26 @@
 	let selectedRows = $state({}) as { [id: number]: { id: number; name: string } };
 	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
 
-	const columns = ['Name'];
+	$effect(() => {
+		if (!show && editAccount) editAccount = undefined;
+	});
+
+	async function handleAfterDeletion(opts: {
+		update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
+		result: ActionResult;
+	}) {
+		const { result, update } = opts;
+
+		if (result.type === 'success') {
+			const deletedAccounts = result.data?.deletedAccounts as number[];
+			accounts = accounts.filter((a) => !deletedAccounts.includes(a.id));
+			selectedRows = {};
+			await update();
+			toastr.success('Accounts deleted');
+		} else if (result.type === 'failure') {
+			toastr.error(result.data?.error);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -105,41 +126,21 @@
 			</div>
 
 			{#if selectedRowsSize > 0}
-				<form
-					action="?/delete"
-					method="post"
-					use:enhance={({ formData }) => {
+				<DeleteButton
+					action="?/deleteBulk"
+					appendToFormData={(formData) => {
 						formData.append('ids', JSON.stringify(Object.keys(selectedRows)));
-
-						return async ({ update, result }) => {
-							if (result.type === 'success') {
-								const deletedAccounts = result.data?.deletedAccounts as number[];
-								accounts = accounts.filter((a) => !deletedAccounts.includes(a.id));
-								selectedRows = {};
-								await update();
-								toastr.success('Accounts deleted');
-							} else if (result.type === 'failure') {
-								toastr.error(result.data?.error);
-							}
-						};
 					}}
+					handleActionResult={handleAfterDeletion}
 				>
-					<Button
-						color="red"
-						outline
-						size="sm"
-						class="inline-flex items-center justify-center"
-						type="submit"
-					>
-						<Icon icon="trash" class="-ml-1 mr-1 h-5 w-5" />Delete ({selectedRowsSize})
-					</Button>
-				</form>
+					Delete ({selectedRowsSize})
+				</DeleteButton>
 			{/if}
 		</div>
 
 		<div class="p-6">
-			<Table {columns} data={accounts}>
-				{#snippet startHeadCol()}
+			<Table headings={['Name']} data={accounts}>
+				{#snippet BeforeColumnLoop()}
 					<th scope="col" class="p-4">
 						<div class="flex items-center">
 							<Input
@@ -161,12 +162,15 @@
 						</div>
 					</th>
 				{/snippet}
-				{#snippet headCol(column)}
+				{#snippet Column({ idx, heading })}
 					<th scope="col" class="px-5 py-3 uppercase">
-						<span class="flex items-center"> {column} </span>
+						<span class="flex items-center"> {heading} </span>
 					</th>
 				{/snippet}
-				{#snippet dataCol(account)}
+				{#snippet AfterColumnLoop()}
+					<th scope="col">Action</th>
+				{/snippet}
+				{#snippet Row(account)}
 					<td class="w-4 p-4">
 						<div class="flex items-center">
 							<Input
@@ -185,15 +189,30 @@
 							<Label for="checkbox-{account.id}" class="sr-only">Select {account.name}</Label>
 						</div>
 					</td>
-					<td class="px-5 py-3">{account.name}</td>
-					<td class="px-6 py-4 text-right">
-						<button
-							onclick={() => {
-								editAccount = account;
-								show = true;
-							}}
-							class="font-medium text-blue-600 hover:underline dark:text-blue-500">Edit</button
-						>
+					<td class="w-10/12 px-5 py-3">{account.name}</td>
+					<td class="w-2/12">
+						<div class="flex items-center justify-center space-x-4 px-6 py-4 text-right">
+							<div class="flex items-center justify-center">
+								<button
+									onclick={() => {
+										editAccount = account;
+										show = true;
+									}}
+									title="Edit"
+								>
+									<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
+								</button>
+							</div>
+							<div class="flex items-center justify-center">
+								<DeleteButton
+									type="icon"
+									appendToFormData={(formData) => {
+										formData.append('id', `${account.id}`);
+									}}
+									handleActionResult={handleAfterDeletion}
+								/>
+							</div>
+						</div>
 					</td>
 				{/snippet}
 			</Table>

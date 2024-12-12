@@ -3,20 +3,20 @@
 	import type { SvelteHTMLElements } from 'svelte/elements';
 
 	let {
-		columns,
-		startHeadCol = undefined,
-		headCol = undefined,
-		endHeadCol = undefined,
-		dataCol = undefined,
-		data = [],
+		headings,
+		data,
+		BeforeColumnLoop = undefined,
+		Column,
+		AfterColumnLoop = undefined,
+		Row,
 		...restProps
 	}: {
-		columns: string[];
-		startHeadCol?: Snippet;
-		headCol?: Snippet<[column: string]>;
-		endHeadCol?: Snippet;
-		dataCol?: Snippet<[data: TData]>;
+		headings: string[];
 		data: TData[];
+		BeforeColumnLoop?: Snippet;
+		Column: Snippet<[{ idx: number; heading: string }]>;
+		AfterColumnLoop?: Snippet;
+		Row?: Snippet<[data: TData]>;
 	} & SvelteHTMLElements['table'] = $props();
 </script>
 
@@ -26,19 +26,19 @@
 >
 	<thead class="bg-gray-100 dark:bg-gray-800">
 		<tr>
-			{@render startHeadCol?.()}
-			{#each columns as column (column)}
-				{@render headCol?.(column)}
+			{@render BeforeColumnLoop?.()}
+			{#each headings as heading, idx (heading)}
+				{@render Column?.({ idx, heading })}
 			{/each}
-			{@render endHeadCol?.()}
+			{@render AfterColumnLoop?.()}
 		</tr>
 	</thead>
 	<tbody>
-		{#each data as d (d)}
+		{#each data as row (row)}
 			<tr
 				class="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-600"
 			>
-				{@render dataCol?.(d)}
+				{@render Row?.(row)}
 			</tr>
 		{/each}
 	</tbody>
