@@ -1,12 +1,9 @@
 <script lang="ts">
 	import { applyAction, enhance } from '$app/forms';
 	import { page } from '$app/stores';
-	import Button from '$components/Button.svelte';
-	import Input from '$components/Input.svelte';
-	import Label from '$components/Label.svelte';
-	import Spinner from '$components/Spinner.svelte';
-	import { toastr } from '$components/Toastr.svelte';
-	import ValidationText from '$components/ValidationText.svelte';
+	import { Button, Spinner } from '$components';
+	import { Input, Label, ValidationText } from '$components/forms';
+	import { toastr } from '$components/toasts';
 	import { AppName } from '$lib';
 	import type { ActionData } from './$types';
 

@@ -1,5 +1,6 @@
 <script lang="ts" generics="TData">
 	import type { Snippet } from 'svelte';
+	import type { SvelteHTMLElements } from 'svelte/elements';
 
 	let {
 		columns,
@@ -8,7 +9,7 @@
 		endHeadCol = undefined,
 		dataCol = undefined,
 		data = [],
-		footer = undefined
+		...restProps
 	}: {
 		columns: string[];
 		startHeadCol?: Snippet;
@@ -16,11 +17,11 @@
 		endHeadCol?: Snippet;
 		dataCol?: Snippet<[data: TData]>;
 		data: TData[];
-		footer?: Snippet;
-	} = $props();
+	} & SvelteHTMLElements['table'] = $props();
 </script>
 
 <table
+	{...restProps}
 	class="w-full overflow-x-auto border text-gray-500 shadow-md dark:text-gray-400 sm:rounded-sm"
 >
 	<thead class="bg-gray-100 dark:bg-gray-800">
@@ -41,5 +42,4 @@
 			</tr>
 		{/each}
 	</tbody>
-	{@render footer?.()}
 </table>

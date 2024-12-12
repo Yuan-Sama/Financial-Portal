@@ -4,9 +4,7 @@
 	import type { LayoutData } from './$types';
 	import { AppName } from '$lib';
 	import { page } from '$app/stores';
-	import SideBar from '$components/sidebar/SideBar.svelte';
-	import SideBarHeading from '$components/sidebar/SideBarHeading.svelte';
-	import SideBarCloseButton from '$components/sidebar/SideBarCloseButton.svelte';
+	import { SideBar, SideBarCloseButton, SideBarHeading } from '$components/sidebars';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 

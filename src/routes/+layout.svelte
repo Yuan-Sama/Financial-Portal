@@ -1,11 +1,10 @@
 <script>
 	import Logo from '$assets/logo.png';
-	import BackToTop from '$components/BackToTop.svelte';
 	import { fly } from 'svelte/transition';
 	import '../app.css';
-	import Toast from '$components/Toast.svelte';
-	import Toastr from '$components/Toastr.svelte';
 	import { cubicInOut } from 'svelte/easing';
+	import { Toast, Toastr } from '$components/toasts';
+	import { BackToTop } from '$components';
 	let { children } = $props();
 </script>
 

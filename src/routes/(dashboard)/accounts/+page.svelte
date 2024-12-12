@@ -1,26 +1,24 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import Button from '$components/Button.svelte';
-	import Input from '$components/Input.svelte';
 	import { AppName } from '$lib';
 	import type { PageData } from './$types';
-	import { toastr } from '$components/Toastr.svelte';
-	import Spinner from '$components/Spinner.svelte';
-	import Label from '$components/Label.svelte';
-	import SideBar from '$components/sidebar/SideBar.svelte';
-	import SideBarCloseButton from '$components/sidebar/SideBarCloseButton.svelte';
-	import SideBarHeading from '$components/sidebar/SideBarHeading.svelte';
-	import SideBarSubHeading from '$components/sidebar/SideBarSubHeading.svelte';
-	import PlusIcon from '$components/icons/PlusIcon.svelte';
-	import TrashIcon from '$components/icons/TrashIcon.svelte';
-	import SearchIcon from '$components/icons/SearchIcon.svelte';
-	import Table from '$components/Table.svelte';
+	import Table from '$components/tables/Table.svelte';
+	import { Button, Icon, Spinner } from '$components';
+	import {
+		SideBar,
+		SideBarCloseButton,
+		SideBarHeading,
+		SideBarSubHeading
+	} from '$components/sidebars';
+	import { Input, Label } from '$components/forms';
+	import { toastr } from '$components/toasts';
 
 	let { data }: { data: PageData } = $props();
 	let accounts = $state(data.accounts);
 
 	let show = $state(false);
-	let createFormSubmitting = $state(false);
+	let submitting = $state(false);
+	let searching = $state(false);
 
 	let selectedRows = $state({}) as { [id: number]: { id: number; name: string } };
 	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
@@ -44,7 +42,7 @@
 			<Button
 				class="flex items-center justify-center font-medium"
 				size="sm"
-				onclick={() => (show = true)}><PlusIcon class="mr-2 size-4" />Add new</Button
+				onclick={() => (show = true)}><Icon icon="plus" class="mr-2 size-4" />Add new</Button
 			>
 		</div>
 
@@ -56,15 +54,46 @@
 					<div
 						class="rtl:inset-r-0 pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3"
 					>
-						<SearchIcon class="size-5 text-gray-500 dark:text-gray-400" aria-hidden="true" />
+						{#if searching}
+							<Spinner />
+						{:else}
+							<Icon
+								icon="search"
+								class="size-5 text-gray-500 dark:text-gray-400"
+								aria-hidden="true"
+							/>
+						{/if}
 					</div>
 
-					<Input
-						type="text"
-						class="ps-10 pt-2 lg:w-80"
-						placeholder="Search for items"
-						id="search"
-					/>
+					<form
+						action="?/search"
+						method="post"
+						onsubmit={(e) => e.preventDefault()}
+						use:enhance={() => {
+							searching = true;
+							return async ({ result, update }) => {
+								if (result.type === 'success') {
+									accounts = result.data?.accounts as { id: number; name: string }[];
+								}
+								searching = false;
+							};
+						}}
+					>
+						<Input
+							name="name"
+							type="search"
+							class="ps-10 pt-2 lg:w-80"
+							placeholder="Search name"
+							oninput={(event) => {
+								if (!event.currentTarget.value.length) {
+									accounts = data.accounts;
+									return;
+								}
+							}}
+							id="search"
+							disabled={searching}
+						/>
+					</form>
 				</div>
 			</div>
 
@@ -95,7 +124,7 @@
 						class="inline-flex items-center justify-center"
 						type="submit"
 					>
-						<TrashIcon class="-ml-1 mr-1 h-5 w-5" />Delete ({selectedRowsSize})
+						<Icon icon="trash" class="-ml-1 mr-1 h-5 w-5" />Delete ({selectedRowsSize})
 					</Button>
 				</form>
 			{/if}
@@ -174,7 +203,7 @@
 		<form
 			class="mt-5"
 			use:enhance={({}) => {
-				createFormSubmitting = true;
+				submitting = true;
 
 				return async ({ update, result }) => {
 					if (result.type === 'success') {
@@ -185,7 +214,7 @@
 					} else if (result.type === 'failure') {
 						toastr.error(result.data?.error);
 					}
-					createFormSubmitting = false;
+					submitting = false;
 				};
 			}}
 			method="POST"
@@ -197,10 +226,10 @@
 				placeholder="e.g. Cash, Bank, Credit Card"
 				id="name"
 				name="name"
-				bind:disabled={createFormSubmitting}
+				bind:disabled={submitting}
 			/>
-			<Button class="mt-5 w-full font-medium" bind:disabled={createFormSubmitting}>
-				{#if createFormSubmitting}
+			<Button class="mt-5 w-full font-medium" bind:disabled={submitting}>
+				{#if submitting}
 					<div role="status" class="me-2 inline">
 						<Spinner ScreenReader="Creating..." inline />
 					</div>

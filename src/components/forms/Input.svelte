@@ -1,19 +1,17 @@
-<script>
+<script lang="ts">
 	import clsx from 'clsx';
+	import type { SvelteHTMLElements } from 'svelte/elements';
 
-	/**
-	 * @type {{
-	 * 	disabled?: boolean,
-	 * 	error?: boolean,
-	 * 	success?: boolean,
-	 * } & import('svelte/elements').HTMLInputAttributes }
-	 */
 	let {
 		disabled = $bindable(false),
 		error = $bindable(false),
 		success = $bindable(false),
 		...restProps
-	} = $props();
+	}: {
+		disabled?: boolean;
+		error?: boolean;
+		success?: boolean;
+	} & SvelteHTMLElements['input'] = $props();
 </script>
 
 <input
