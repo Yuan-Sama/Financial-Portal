@@ -19,6 +19,13 @@
 	let show = $state(false);
 	let submitting = $state(false);
 	let searching = $state(false);
+	let editAccount = $state() as
+		| {
+				id: number;
+				name: string;
+		  }
+		| undefined;
+	let editForm = $derived(Boolean(editAccount));
 
 	let selectedRows = $state({}) as { [id: number]: { id: number; name: string } };
 	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
@@ -71,7 +78,7 @@
 						onsubmit={(e) => e.preventDefault()}
 						use:enhance={() => {
 							searching = true;
-							return async ({ result, update }) => {
+							return async ({ result }) => {
 								if (result.type === 'success') {
 									accounts = result.data?.accounts as { id: number; name: string }[];
 								}
@@ -179,6 +186,15 @@
 						</div>
 					</td>
 					<td class="px-5 py-3">{account.name}</td>
+					<td class="px-6 py-4 text-right">
+						<button
+							onclick={() => {
+								editAccount = account;
+								show = true;
+							}}
+							class="font-medium text-blue-600 hover:underline dark:text-blue-500">Edit</button
+						>
+					</td>
 				{/snippet}
 			</Table>
 		</div>
@@ -207,8 +223,22 @@
 
 				return async ({ update, result }) => {
 					if (result.type === 'success') {
-						toastr.success('Account created');
-						accounts = result.data?.accounts as { id: number; name: string }[];
+						const updatedAccount = result.data?.updatedAccount as
+							| { id: number; name: string }
+							| undefined;
+						if (updatedAccount) {
+							toastr.success('Account updated');
+							const currentAccount = accounts.find((a) => a.id === updatedAccount.id);
+
+							if (currentAccount) {
+								currentAccount.name = updatedAccount.name;
+							}
+
+							editAccount = undefined;
+						} else {
+							toastr.success('Account created');
+							accounts = result.data?.accounts as { id: number; name: string }[];
+						}
 						await update();
 						show = false;
 					} else if (result.type === 'failure') {
@@ -218,22 +248,34 @@
 				};
 			}}
 			method="POST"
-			action="?/create"
+			action={editForm ? '?/edit' : '?/create'}
 		>
 			<Label for="name">Name</Label>
-			<Input
-				class="mt-3 w-full"
-				placeholder="e.g. Cash, Bank, Credit Card"
-				id="name"
-				name="name"
-				bind:disabled={submitting}
-			/>
+			{#if editAccount}
+				<input type="number" hidden name="id" value={editAccount.id} />
+				<Input
+					class="mt-3 w-full"
+					placeholder="e.g. Cash, Bank, Credit Card"
+					value={editAccount.name}
+					id="name"
+					name="name"
+					bind:disabled={submitting}
+				/>
+			{:else}
+				<Input
+					class="mt-3 w-full"
+					placeholder="e.g. Cash, Bank, Credit Card"
+					id="name"
+					name="name"
+					bind:disabled={submitting}
+				/>
+			{/if}
 			<Button class="mt-5 w-full font-medium" bind:disabled={submitting}>
 				{#if submitting}
 					<div role="status" class="me-2 inline">
 						<Spinner ScreenReader="Creating..." inline />
 					</div>
-				{/if}Create account</Button
+				{/if}{editForm ? 'Save changes' : 'Create account'}</Button
 			>
 		</form>
 	</div>

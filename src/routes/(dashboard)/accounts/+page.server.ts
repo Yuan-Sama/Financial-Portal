@@ -40,8 +40,6 @@ export const actions: Actions = {
 			});
 		}
 
-		console.log(`%${result.data.name}%`);
-
 		const accs = await db
 			.select({
 				id: accounts.id,
@@ -54,6 +52,48 @@ export const actions: Actions = {
 			accounts: accs
 		};
 	},
+
+	edit: async ({ request, locals }) => {
+		const user = await locals.getUser();
+		if (!user) return fail(401, { error: 'Unauthorized' });
+
+		const formData = await request.formData();
+		const rawData = Object.fromEntries(formData);
+
+		const result = z
+			.object({
+				id: z.coerce
+					.number({ required_error: 'id is required' })
+					.min(1, { message: 'id must be greater than 0' }),
+				name: z
+					.string({ required_error: 'name is required' })
+					.min(1, { message: 'name cannot be empty' })
+			})
+			.safeParse(rawData);
+
+		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+
+		if (result.error) {
+			return fail(400, {
+				error: result.error.errors[0].message
+			});
+		}
+
+		await db
+			.update(accounts)
+			.set({
+				name: result.data.name
+			})
+			.where(and(eq(accounts.userId, user.id), eq(accounts.id, result.data.id!)));
+
+		return {
+			updatedAccount: {
+				id: result.data.id,
+				name: result.data.name
+			}
+		};
+	},
+
 	create: async ({ request, locals }) => {
 		const user = await locals.getUser();
 		if (!user) return fail(401, { error: 'Unauthorized' });
