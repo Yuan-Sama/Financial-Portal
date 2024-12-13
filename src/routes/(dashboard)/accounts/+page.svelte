@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { AppName } from '$lib';
 	import type { PageData } from './$types';
-	import { Button, Icon, Spinner } from '$components';
+	import { Button, Icon } from '$components';
 	import {
 		SideBar,
 		SideBarCloseButton,
@@ -11,14 +10,12 @@
 	} from '$components/sidebars';
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
-	import { DeleteAction, DeleteBulk, Table } from '$components/tables';
+	import { DeleteAction, DeleteBulk, SearchBar, Table } from '$components/tables';
 
 	let { data }: { data: PageData } = $props();
 	let accounts = $state(data.accounts);
 
 	let showSideBar = $state(false);
-
-	let searching = $state(false);
 
 	let editAccount = $state() as
 		| {
@@ -69,53 +66,20 @@
 
 		<div class="flex items-center justify-between gap-y-2 space-y-1.5 px-6">
 			<div class="bg-white dark:bg-gray-900">
-				<Label for="search" class="sr-only">Search</Label>
-
-				<div class="relative mt-1">
-					<div
-						class="rtl:inset-r-0 pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3"
-					>
-						{#if searching}
-							<Spinner />
-						{:else}
-							<Icon
-								icon="search"
-								class="size-5 text-gray-500 dark:text-gray-400"
-								aria-hidden="true"
-							/>
-						{/if}
-					</div>
-
-					<form
-						action="?/search"
-						method="post"
-						onsubmit={(e) => e.preventDefault()}
-						use:enhance={() => {
-							searching = true;
-							return async ({ result }) => {
-								if (result.type === 'success') {
-									accounts = result.data?.accounts as { id: number; name: string }[];
-								}
-								searching = false;
-							};
-						}}
-					>
-						<Input
-							name="name"
-							type="search"
-							class="ps-10 pt-2 lg:w-80"
-							placeholder="Search name"
-							oninput={(event) => {
-								if (!event.currentTarget.value.length) {
-									accounts = data.accounts;
-									return;
-								}
-							}}
-							id="search"
-							disabled={searching}
-						/>
-					</form>
-				</div>
+				<SearchBar
+					id="search"
+					name="name"
+					placeholder="Search for accounts"
+					oninput={(event) => {
+						if (!event.currentTarget.value.length) {
+							accounts = data.accounts;
+							return;
+						}
+					}}
+					handleSuccess={async ({ successResult }) => {
+						accounts = successResult.data?.accounts as { id: number; name: string }[];
+					}}
+				/>
 			</div>
 
 			{#if selectedRowsSize > 0}

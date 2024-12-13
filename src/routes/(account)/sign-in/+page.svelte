@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { applyAction } from '$app/forms';
 	import { page } from '$app/stores';
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
@@ -23,9 +22,8 @@
 
 <Form
 	class="space-y-4 md:space-y-6"
-	handleSuccess={async ({ successResult }) => {
+	handleRedirect={() => {
 		toastr.success('Welcome back');
-		await applyAction(successResult);
 	}}
 >
 	{#snippet content(formState)}

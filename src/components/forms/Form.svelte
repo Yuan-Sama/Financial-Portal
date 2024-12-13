@@ -7,6 +7,7 @@
 	let {
 		content,
 		handleSuccess = undefined,
+		handleRedirect = undefined,
 		...restProps
 	}: {
 		content: Snippet<[formState: { submitting: boolean }]>;
@@ -17,6 +18,7 @@
 			successResult: { type: 'success'; status: number; data?: Record<string, any> };
 			update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
 		}) => Promise<void>;
+		handleRedirect?: () => void;
 	} & SvelteHTMLElements['form'] = $props();
 
 	let submitting = $state(false);
@@ -31,9 +33,8 @@
 		return async (opts) => {
 			const { formData, formElement, action, result, update } = opts;
 
+			submitting = false;
 			if (result.type === 'failure') {
-				submitting = false;
-
 				if (result.data?.validationErrors) {
 					await applyAction(result);
 					return;
@@ -43,21 +44,23 @@
 				return;
 			}
 
-			if (result.type === 'redirect' || result.type === 'error') {
-				submitting = false;
-				await applyAction(result);
-				return;
+			if (result.type === 'error') {
+				// TODO: handle error here maybe ?
+				return await applyAction(result);
 			}
 
-			await handleSuccess?.({
+			if (result.type === 'redirect') {
+				handleRedirect?.();
+				return await applyAction(result);
+			}
+
+			return await handleSuccess?.({
 				formData,
 				formElement,
 				action,
 				successResult: { ...result },
 				update
 			});
-
-			submitting = false;
 		};
 	}}
 >
