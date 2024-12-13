@@ -5,20 +5,28 @@
 	let {
 		headings,
 		data,
+		TopMenu = undefined,
 		BeforeColumnLoop = undefined,
-		Column,
 		AfterColumnLoop = undefined,
 		Row,
+		BottomMenu = undefined,
 		...restProps
 	}: {
 		headings: string[];
 		data: TData[];
+		TopMenu?: Snippet;
 		BeforeColumnLoop?: Snippet;
-		Column: Snippet<[{ idx: number; heading: string }]>;
 		AfterColumnLoop?: Snippet;
 		Row?: Snippet<[data: TData]>;
+		BottomMenu?: Snippet;
 	} & SvelteHTMLElements['table'] = $props();
 </script>
+
+{#if TopMenu}
+	<div class="my-7 flex items-center justify-between">
+		{@render TopMenu?.()}
+	</div>
+{/if}
 
 <table
 	{...restProps}
@@ -28,7 +36,9 @@
 		<tr>
 			{@render BeforeColumnLoop?.()}
 			{#each headings as heading, idx (heading)}
-				{@render Column?.({ idx, heading })}
+				<th scope="col" class="px-5 py-3 uppercase" data-index={idx}>
+					<span class="flex items-center"> {heading} </span>
+				</th>
 			{/each}
 			{@render AfterColumnLoop?.()}
 		</tr>
@@ -43,3 +53,9 @@
 		{/each}
 	</tbody>
 </table>
+
+{#if BottomMenu}
+	<div class="flex-column my-7 flex flex-wrap items-center justify-between md:flex-row">
+		{@render BottomMenu()}
+	</div>
+{/if}

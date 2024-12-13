@@ -64,37 +64,36 @@
 			>
 		</div>
 
-		<div class="flex items-center justify-between gap-y-2 space-y-1.5 px-6">
-			<div class="bg-white dark:bg-gray-900">
-				<SearchBar
-					id="search"
-					name="name"
-					placeholder="Search for accounts"
-					oninput={(event) => {
-						if (!event.currentTarget.value.length) {
-							accounts = data.accounts;
-							return;
-						}
-					}}
-					handleSuccess={async ({ successResult }) => {
-						accounts = successResult.data?.accounts as { id: number; name: string }[];
-					}}
-				/>
-			</div>
-
-			{#if selectedRowsSize > 0}
-				<DeleteBulk
-					set={(formData) => formData.set('ids', JSON.stringify(Object.keys(selectedRows)))}
-					handleSuccess={async ({ successResult, update }) =>
-						deleteSelectedAccounts(successResult.data!.deletedAccounts as number[], update)}
-				>
-					Delete ({selectedRowsSize})
-				</DeleteBulk>
-			{/if}
-		</div>
-
-		<div class="p-6">
+		<div class="px-6 pb-6">
 			<Table headings={['Name']} data={accounts}>
+				{#snippet TopMenu()}
+					<div class="bg-white dark:bg-gray-900">
+						<SearchBar
+							id="search"
+							name="name"
+							placeholder="Search for accounts"
+							oninput={(event) => {
+								if (!event.currentTarget.value.length) {
+									accounts = data.accounts;
+									return;
+								}
+							}}
+							handleSuccess={async ({ successResult }) => {
+								accounts = successResult.data?.accounts as { id: number; name: string }[];
+							}}
+						/>
+					</div>
+
+					{#if selectedRowsSize > 0}
+						<DeleteBulk
+							set={(formData) => formData.set('ids', JSON.stringify(Object.keys(selectedRows)))}
+							handleSuccess={async ({ successResult, update }) =>
+								deleteSelectedAccounts(successResult.data!.deletedAccounts as number[], update)}
+						>
+							Delete ({selectedRowsSize})
+						</DeleteBulk>
+					{/if}
+				{/snippet}
 				{#snippet BeforeColumnLoop()}
 					<th scope="col" class="p-4">
 						<div class="flex items-center">
@@ -115,11 +114,6 @@
 							/>
 							<Label for="check-all" class="sr-only">checkbox</Label>
 						</div>
-					</th>
-				{/snippet}
-				{#snippet Column({ idx, heading })}
-					<th scope="col" class="px-5 py-3 uppercase">
-						<span class="flex items-center"> {heading} </span>
 					</th>
 				{/snippet}
 				{#snippet AfterColumnLoop()}
@@ -144,7 +138,7 @@
 							<Label for="checkbox-{account.id}" class="sr-only">Select {account.name}</Label>
 						</div>
 					</td>
-					<td class="w-10/12 px-5 py-3">{account.name}</td>
+					<td class="px-5 py-3">{account.name}</td>
 					<td class="w-2/12">
 						<div class="flex items-center justify-center gap-x-3 px-6 py-4 text-right">
 							<button
@@ -164,14 +158,13 @@
 						</div>
 					</td>
 				{/snippet}
+				{#snippet BottomMenu()}
+					<span
+						class="mb-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:mb-0 md:inline md:w-auto"
+						>{selectedRowsSize} of {accounts.length} row(s) selected.</span
+					>
+				{/snippet}
 			</Table>
-		</div>
-
-		<div class="flex-column flex flex-wrap items-center justify-between px-6 pt-4 md:flex-row">
-			<span
-				class="mb-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:mb-0 md:inline md:w-auto"
-				>{selectedRowsSize} of {accounts.length} row(s) selected.</span
-			>
 		</div>
 	</div>
 </div>
