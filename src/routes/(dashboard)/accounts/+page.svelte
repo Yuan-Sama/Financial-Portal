@@ -12,14 +12,15 @@
 	} from '$components/sidebars';
 	import { Input, Label } from '$components/forms';
 	import { toastr } from '$components/toasts';
-	import DeleteButton from '$components/tables/DeleteButton.svelte';
+	import DeleteButton from '$components/tables/DeleteAction.svelte';
 	import type { ActionResult } from '@sveltejs/kit';
+	import SubmitButton from '$components/forms/SubmitButton.svelte';
+	import Form from '$components/forms/Form.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let accounts = $state(data.accounts);
 
 	let show = $state(false);
-	let submitting = $state(false);
 	let searching = $state(false);
 	let editAccount = $state() as
 		| {
@@ -27,7 +28,6 @@
 				name: string;
 		  }
 		| undefined;
-	let editForm = $derived(Boolean(editAccount));
 
 	let selectedRows = $state({}) as { [id: number]: { id: number; name: string } };
 	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
@@ -233,69 +233,56 @@
 	<div class="overflow-y-auto px-3 py-7">
 		<SideBarHeading textCenter>{AppName}</SideBarHeading>
 
-		<SideBarSubHeading>Create a new account to track your transactions.</SideBarSubHeading>
+		{#if !editAccount}
+			<SideBarSubHeading>Create a new account to track your transactions.</SideBarSubHeading>
+		{:else}
+			<SideBarSubHeading>Edit the existed account.</SideBarSubHeading>
+		{/if}
 
-		<form
-			class="mt-5"
-			use:enhance={({}) => {
-				submitting = true;
+		<Form
+			action={editAccount ? '?/edit' : '?/create'}
+			handleSuccess={async ({ successResult, update }) => {
+				show = false;
 
-				return async ({ update, result }) => {
-					if (result.type === 'success') {
-						const updatedAccount = result.data?.updatedAccount as
-							| { id: number; name: string }
-							| undefined;
-						if (updatedAccount) {
-							toastr.success('Account updated');
-							const currentAccount = accounts.find((a) => a.id === updatedAccount.id);
+				const { data } = successResult;
+				const updatedAccount = data?.updatedAccount as { id: number; name: string } | undefined;
 
-							if (currentAccount) {
-								currentAccount.name = updatedAccount.name;
-							}
+				if (updatedAccount) {
+					toastr.success('Account updated');
+					const currentAccount = accounts.find((a) => a.id === updatedAccount.id);
 
-							editAccount = undefined;
-						} else {
-							toastr.success('Account created');
-							accounts = result.data?.accounts as { id: number; name: string }[];
-						}
-						await update();
-						show = false;
-					} else if (result.type === 'failure') {
-						toastr.error(result.data?.error);
+					if (currentAccount) {
+						currentAccount.name = updatedAccount.name;
 					}
-					submitting = false;
-				};
+
+					editAccount = undefined;
+				} else {
+					toastr.success('Account created');
+					accounts = data?.accounts as { id: number; name: string }[];
+				}
+
+				await update();
 			}}
-			method="POST"
-			action={editForm ? '?/edit' : '?/create'}
 		>
-			<Label for="name">Name</Label>
-			{#if editAccount}
-				<input type="number" hidden name="id" value={editAccount.id} />
+			{#snippet content(formState)}
+				{#if editAccount}
+					<input type="number" hidden name="id" value={editAccount.id} />
+				{/if}
+
+				<Label for="name">Name</Label>
 				<Input
 					class="mt-3 w-full"
 					placeholder="e.g. Cash, Bank, Credit Card"
-					value={editAccount.name}
+					value={editAccount?.name}
 					id="name"
 					name="name"
-					bind:disabled={submitting}
+					bind:disabled={formState.submitting}
 				/>
-			{:else}
-				<Input
-					class="mt-3 w-full"
-					placeholder="e.g. Cash, Bank, Credit Card"
-					id="name"
-					name="name"
-					bind:disabled={submitting}
-				/>
-			{/if}
-			<Button class="mt-5 w-full font-medium" bind:disabled={submitting}>
-				{#if submitting}
-					<div role="status" class="me-2 inline">
-						<Spinner ScreenReader="Creating..." inline />
-					</div>
-				{/if}{editForm ? 'Save changes' : 'Create account'}</Button
-			>
-		</form>
+
+				<SubmitButton bind:disabled={formState.submitting}>
+					{editAccount ? 'Save changes' : 'Create account'}
+				</SubmitButton>
+			{/snippet}
+		</Form>
 	</div>
 </SideBar>

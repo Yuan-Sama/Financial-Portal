@@ -8,7 +8,7 @@
 
 <p
 	{...restProps}
-	class={clsx('mt-2 text-center text-sm text-gray-500 dark:text-gray-400', restProps.class)}
+	class={clsx('mb-4 mt-2 text-center text-sm text-gray-500 dark:text-gray-400', restProps.class)}
 >
 	{@render children()}
 </p>
