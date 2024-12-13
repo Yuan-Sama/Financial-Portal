@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { AppName } from '$lib';
 	import type { PageData } from './$types';
-	import { Button, Icon } from '$components';
+	import { Button, Icon, Pagination } from '$components';
 	import {
 		SideBar,
 		SideBarCloseButton,
@@ -10,7 +10,7 @@
 	} from '$components/sidebars';
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
-	import { DeleteAction, DeleteBulk, SearchBar, Table } from '$components/tables';
+	import { DeleteAction, DeleteBulk, RowsSelector, SearchBar, Table } from '$components/tables';
 
 	let { data }: { data: PageData } = $props();
 	let accounts = $state(data.accounts);
@@ -160,9 +160,13 @@
 				{/snippet}
 				{#snippet BottomMenu()}
 					<span
-						class="mb-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:mb-0 md:inline md:w-auto"
+						class="my-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:inline md:w-auto lg:mb-4"
 						>{selectedRowsSize} of {accounts.length} row(s) selected.</span
 					>
+					<div class="my-4 inline-flex items-center justify-center">
+						<RowsSelector onchange={(e) => console.log(e.currentTarget.value)} />
+						<Pagination />
+					</div>
 				{/snippet}
 			</Table>
 		</div>

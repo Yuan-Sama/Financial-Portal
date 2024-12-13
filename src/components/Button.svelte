@@ -6,7 +6,7 @@
 	 * @type {"base" | "xs" | "sm" | "lg" | "xl"}
 	 *
 	 * @typedef Color
-	 * @type {"primary" | "red"}
+	 * @type {"primary" | "red" | "light"}
 	 *
 	 * @typedef Shape
 	 * @type {"default" | "pill" | "round"}
@@ -22,7 +22,8 @@
 
 	const colors = {
 		primary: 'primary',
-		red: 'red'
+		red: 'red',
+		light: 'light'
 	};
 
 	const shapes = {
@@ -37,6 +38,7 @@
 	 * 	size?: Size,
 	 * 	shape?: Shape,
 	 *  outline?: boolean,
+	 *  noborder?: boolean,
 	 * 	disabled?: boolean,
 	 * 	children: import('svelte').Snippet
 	 * } & import('svelte/elements').HTMLButtonAttributes}
@@ -46,6 +48,7 @@
 		size = 'base',
 		shape = 'default',
 		outline = false,
+		noborder = false,
 		disabled = $bindable(false),
 		children,
 		...restProps
@@ -70,29 +73,36 @@
 		shapes.default === shape && 'rounded-lg',
 		shapes.pill === shape && 'rounded-full',
 		shapes.round === shape && 'rounded-[50%]',
+		!noborder && 'border',
 		colors.primary === color && [
 			disabled && [
 				outline &&
-					'border border-primary-400 text-primary-400 dark:border-primary-500 dark:text-primary-500',
+					'border-primary-400 text-primary-400 dark:border-primary-500 dark:text-primary-500',
 				!outline && 'bg-primary-400 text-white dark:bg-primary-500'
 			],
 			!disabled && [
 				outline &&
-					'border border-primary-700 text-primary-700 hover:bg-primary-800 hover:text-white focus:ring-primary-300 dark:border-primary-500 dark:text-primary-500 dark:hover:bg-primary-500 dark:hover:text-white dark:focus:ring-primary-800',
+					'border-primary-700 text-primary-700 hover:bg-primary-800 hover:text-white focus:ring-primary-300 dark:border-primary-500 dark:text-primary-500 dark:hover:bg-primary-500 dark:hover:text-white dark:focus:ring-primary-800',
 				!outline &&
 					'bg-primary-700 text-white hover:bg-primary-800 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800'
 			]
 		],
 		colors.red === color && [
 			disabled && [
-				outline && 'border border-red-400 text-red-400 dark:border-red-500 dark:text-red-500',
+				outline && 'border-red-400 text-red-400 dark:border-red-500 dark:text-red-500',
 				!outline && 'bg-red-400 text-white dark:bg-red-500'
 			],
 			!disabled && [
 				outline &&
-					'border border-red-700 text-red-700 hover:bg-red-800 hover:text-white focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-500 dark:hover:text-white dark:focus:ring-red-800',
+					'border-red-700 text-red-700 hover:bg-red-800 hover:text-white focus:ring-red-300 dark:border-red-500 dark:text-red-500 dark:hover:bg-red-500 dark:hover:text-white dark:focus:ring-red-800',
 				!outline &&
 					'bg-red-700 text-white hover:bg-red-800 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800'
+			]
+		],
+		colors.light === color && [
+			disabled && ['bg-white/40 text-gray-900 dark:bg-gray-500 dark:text-white/50'],
+			!disabled && [
+				'border-gray-300 bg-white text-gray-900 hover:bg-gray-100 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700'
 			]
 		],
 		restProps.class

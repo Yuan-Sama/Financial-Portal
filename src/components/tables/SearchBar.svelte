@@ -49,7 +49,7 @@
 			};
 		}}
 	>
-		<Label for={name} class="sr-only">Search</Label>
+		<Label for={id} class="sr-only">Search</Label>
 		<Input
 			{name}
 			type="search"

@@ -26,7 +26,6 @@
 	<div class="fixed bottom-4 right-4 z-[996]" transition:fade={{ duration: 700 }}>
 		<Button
 			class="leading-0 flex size-10 animate-bounce items-center justify-center"
-			color="primary"
 			shape="round"
 			outline={true}
 			onclick={() => scrollToTop()}
@@ -37,9 +36,9 @@
 					width="24"
 					height="24"
 					viewBox="0 0 24 24"
-					style="fill: currentColor;"
-					><path d="m12 3.879-7.061 7.06 2.122 2.122L12 8.121l4.939 4.94 2.122-2.122z"></path><path
-						d="m4.939 17.939 2.122 2.122L12 15.121l4.939 4.94 2.122-2.122L12 10.879z"
+					fill="currentColor"
+					><path d="m6.293 11.293 1.414 1.414L12 8.414l4.293 4.293 1.414-1.414L12 5.586z"
+					></path><path d="m6.293 16.293 1.414 1.414L12 13.414l4.293 4.293 1.414-1.414L12 10.586z"
 					></path></svg
 				>
 			</span>
