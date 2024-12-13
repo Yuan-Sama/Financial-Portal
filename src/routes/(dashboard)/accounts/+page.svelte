@@ -2,7 +2,6 @@
 	import { enhance } from '$app/forms';
 	import { AppName } from '$lib';
 	import type { PageData } from './$types';
-	import Table from '$components/tables/Table.svelte';
 	import { Button, Icon, Spinner } from '$components';
 	import {
 		SideBar,
@@ -10,47 +9,41 @@
 		SideBarHeading,
 		SideBarSubHeading
 	} from '$components/sidebars';
-	import { Input, Label } from '$components/forms';
+	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
-	import DeleteButton from '$components/tables/DeleteAction.svelte';
-	import type { ActionResult } from '@sveltejs/kit';
-	import SubmitButton from '$components/forms/SubmitButton.svelte';
-	import Form from '$components/forms/Form.svelte';
+	import { DeleteAction, DeleteBulk, Table } from '$components/tables';
 
 	let { data }: { data: PageData } = $props();
 	let accounts = $state(data.accounts);
 
-	let show = $state(false);
+	let showSideBar = $state(false);
+
 	let searching = $state(false);
+
 	let editAccount = $state() as
 		| {
 				id: number;
 				name: string;
 		  }
 		| undefined;
-
 	let selectedRows = $state({}) as { [id: number]: { id: number; name: string } };
 	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
 
 	$effect(() => {
-		if (!show && editAccount) editAccount = undefined;
+		if (!showSideBar && editAccount) editAccount = undefined;
 	});
 
-	async function handleAfterDeletion(opts: {
-		update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
-		result: ActionResult;
-	}) {
-		const { result, update } = opts;
+	async function deleteSelectedAccounts(
+		deletedAccounts: number[],
+		update: { (options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>; (): any }
+	) {
+		if (deletedAccounts.length > 1) toastr.success('Accounts deleted');
+		else if (deletedAccounts.length === 1) toastr.success('Account deleted');
 
-		if (result.type === 'success') {
-			const deletedAccounts = result.data?.deletedAccounts as number[];
-			accounts = accounts.filter((a) => !deletedAccounts.includes(a.id));
-			selectedRows = {};
-			await update();
-			toastr.success('Accounts deleted');
-		} else if (result.type === 'failure') {
-			toastr.error(result.data?.error);
-		}
+		accounts = accounts.filter((a) => !deletedAccounts.includes(a.id));
+		selectedRows = {};
+
+		await update();
 	}
 </script>
 
@@ -70,7 +63,7 @@
 			<Button
 				class="flex items-center justify-center font-medium"
 				size="sm"
-				onclick={() => (show = true)}><Icon icon="plus" class="mr-2 size-4" />Add new</Button
+				onclick={() => (showSideBar = true)}><Icon icon="plus" class="mr-2 size-4" />Add new</Button
 			>
 		</div>
 
@@ -126,15 +119,13 @@
 			</div>
 
 			{#if selectedRowsSize > 0}
-				<DeleteButton
-					action="?/deleteBulk"
-					appendToFormData={(formData) => {
-						formData.append('ids', JSON.stringify(Object.keys(selectedRows)));
-					}}
-					handleActionResult={handleAfterDeletion}
+				<DeleteBulk
+					set={(formData) => formData.set('ids', JSON.stringify(Object.keys(selectedRows)))}
+					handleSuccess={async ({ successResult, update }) =>
+						deleteSelectedAccounts(successResult.data!.deletedAccounts as number[], update)}
 				>
 					Delete ({selectedRowsSize})
-				</DeleteButton>
+				</DeleteBulk>
 			{/if}
 		</div>
 
@@ -191,27 +182,21 @@
 					</td>
 					<td class="w-10/12 px-5 py-3">{account.name}</td>
 					<td class="w-2/12">
-						<div class="flex items-center justify-center space-x-4 px-6 py-4 text-right">
-							<div class="flex items-center justify-center">
-								<button
-									onclick={() => {
-										editAccount = account;
-										show = true;
-									}}
-									title="Edit"
-								>
-									<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
-								</button>
-							</div>
-							<div class="flex items-center justify-center">
-								<DeleteButton
-									type="icon"
-									appendToFormData={(formData) => {
-										formData.append('id', `${account.id}`);
-									}}
-									handleActionResult={handleAfterDeletion}
-								/>
-							</div>
+						<div class="flex items-center justify-center gap-x-3 px-6 py-4 text-right">
+							<button
+								onclick={() => {
+									editAccount = account;
+									showSideBar = true;
+								}}
+								title="Edit"
+							>
+								<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
+							</button>
+							<DeleteAction
+								set={(formData) => formData.set('id', `${account.id}`)}
+								handleSuccess={async ({ successResult, update }) =>
+									deleteSelectedAccounts(successResult.data!.deletedAccounts as number[], update)}
+							/>
 						</div>
 					</td>
 				{/snippet}
@@ -227,8 +212,8 @@
 	</div>
 </div>
 
-<SideBar bind:show outsideclose direction="right" class="w-full lg:max-w-md">
-	<SideBarCloseButton onclick={() => (show = false)} left />
+<SideBar bind:show={showSideBar} outsideclose direction="right" class="w-full lg:max-w-md">
+	<SideBarCloseButton onclick={() => (showSideBar = false)} left />
 
 	<div class="overflow-y-auto px-3 py-7">
 		<SideBarHeading textCenter>{AppName}</SideBarHeading>
@@ -242,7 +227,7 @@
 		<Form
 			action={editAccount ? '?/edit' : '?/create'}
 			handleSuccess={async ({ successResult, update }) => {
-				show = false;
+				showSideBar = false;
 
 				const { data } = successResult;
 				const updatedAccount = data?.updatedAccount as { id: number; name: string } | undefined;

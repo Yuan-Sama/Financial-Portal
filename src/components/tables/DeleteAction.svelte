@@ -1,56 +1,44 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button, Icon } from '$components';
-	import type { ActionResult } from '@sveltejs/kit';
-	import type { Snippet } from 'svelte';
+	import { Icon } from '$components';
+	import { toastr } from '$components/toasts';
 
 	let {
 		action = '?/delete',
-		appendToFormData = undefined,
-		handleActionResult,
-		children = undefined,
-		type = 'button'
+		set = undefined,
+		handleSuccess = undefined
 	}: {
 		action?: string;
-		appendToFormData?: (formData: FormData) => void;
-		handleActionResult: (opts: {
+		set?: (formData: FormData) => void;
+		handleSuccess?: (opts: {
 			update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
-			result: ActionResult;
+			successResult: { type: 'success'; status: number; data?: Record<string, unknown> };
 		}) => Promise<void>;
-		children?: Snippet;
-		icon?: boolean;
-		type?: 'button' | 'icon';
 	} = $props();
 </script>
 
 <!-- TODO: add confirm modal -->
 <form
 	{action}
-	method="post"
+	method="POST"
 	class="contents"
 	use:enhance={({ formData }) => {
-		appendToFormData?.(formData);
+		set?.(formData);
 
-		return async ({ update, result }) => await handleActionResult({ update, result });
+		return async ({ update, result }) => {
+			if (result.type === 'failure') {
+				toastr.error(result.data?.error);
+				return;
+			}
+
+			if (result.type === 'success') {
+				await handleSuccess?.({ update, successResult: { ...result } });
+				return;
+			}
+		};
 	}}
 >
-	{#if type === 'icon'}
-		<button
-			class="inline-flex items-center justify-center font-medium text-red-600 dark:text-red-500"
-			title="Delete"
-			type="submit"
-		>
-			<Icon icon="trash" />
-		</button>
-	{:else}
-		<Button
-			color="red"
-			outline
-			size="sm"
-			class="inline-flex items-center justify-center"
-			type="submit"
-		>
-			<Icon icon="trash" class="-ml-1 mr-1 h-5 w-5" />{@render children?.()}
-		</Button>
-	{/if}
+	<button class="font-medium text-red-600 dark:text-red-500" title="Delete" type="submit">
+		<Icon icon="trash" />
+	</button>
 </form>
