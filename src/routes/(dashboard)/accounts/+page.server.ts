@@ -3,22 +3,45 @@ import { db } from '$lib/server/db';
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { dev } from '$app/environment';
-import { and, eq, inArray, like } from 'drizzle-orm';
+import { and, count, eq, inArray, like } from 'drizzle-orm';
 import { z } from 'zod';
 
-export const load = (async ({ parent }) => {
-	const data = await parent();
+const PAGE_SIZE_DEFAULT = 5;
+const PAGE_INDEX = 0;
 
-	const accs = await db
+export const load = (async ({ parent }) => {
+	const { user } = await parent();
+
+	const result = await db
+		.select({ count: count(accounts.id) })
+		.from(accounts)
+		.where(eq(accounts.userId, user.id));
+
+	const totalRecords = result[0].count;
+
+	const data = await db
 		.select({
 			id: accounts.id,
 			name: accounts.name
 		})
 		.from(accounts)
-		.where(eq(accounts.userId, data.user.id));
+		.where(eq(accounts.userId, user.id))
+		.offset(PAGE_INDEX)
+		.limit(PAGE_SIZE_DEFAULT);
+
+	const currentPage = !data.length ? 0 : PAGE_INDEX + 1;
+	const totalPages = Math.ceil(totalRecords / PAGE_SIZE_DEFAULT);
+	const nextPage = currentPage >= totalPages ? null : currentPage + 1;
 
 	return {
-		accounts: accs
+		pagination: {
+			prevPage: null,
+			currentPage,
+			nextPage,
+			totalPages,
+			totalRecords
+		},
+		data
 	};
 }) satisfies PageServerLoad;
 

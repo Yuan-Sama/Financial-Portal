@@ -13,7 +13,8 @@
 	import { DeleteAction, DeleteBulk, RowsSelector, SearchBar, Table } from '$components/tables';
 
 	let { data }: { data: PageData } = $props();
-	let accounts = $state(data.accounts);
+	let accounts = $state(data.data);
+	let pagination = $state(data.pagination);
 
 	let showSideBar = $state(false);
 
@@ -42,6 +43,8 @@
 
 		await update();
 	}
+
+	let rowsPerPage = $state(5);
 </script>
 
 <svelte:head>
@@ -74,7 +77,7 @@
 							placeholder="Search for accounts"
 							oninput={(event) => {
 								if (!event.currentTarget.value.length) {
-									accounts = data.accounts;
+									accounts = data.data;
 									return;
 								}
 							}}
@@ -164,8 +167,44 @@
 						>{selectedRowsSize} of {accounts.length} row(s) selected.</span
 					>
 					<div class="my-4 inline-flex items-center justify-center">
-						<RowsSelector onchange={(e) => console.log(e.currentTarget.value)} />
-						<Pagination />
+						<RowsSelector
+							onchange={async (e) => {
+								rowsPerPage = +e.currentTarget.value;
+								const searchParams = new URLSearchParams({
+									page: '' + 1,
+									pageSize: '' + rowsPerPage
+								});
+								const response = await fetch('/api/accounts?' + searchParams.toString());
+								if (response.ok) {
+									const data = (await response.json()) as {
+										pagination: typeof pagination;
+										data: typeof accounts;
+									};
+									accounts = data.data;
+									pagination = data.pagination;
+								}
+							}}
+						/>
+						<Pagination
+							{...pagination}
+							{rowsPerPage}
+							onpagechange={async (page) => {
+								const searchParams = new URLSearchParams({
+									page: '' + page,
+									pageSize: '' + rowsPerPage
+								});
+								const response = await fetch('/api/accounts?' + searchParams.toString());
+								if (response.ok) {
+									const data = (await response.json()) as {
+										pagination: typeof pagination;
+										data: typeof accounts;
+									};
+									accounts = data.data;
+									pagination = data.pagination;
+								}
+							}}
+							dataLength={accounts.length}
+						/>
 					</div>
 				{/snippet}
 			</Table>

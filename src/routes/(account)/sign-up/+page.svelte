@@ -58,6 +58,7 @@
 				required
 				error={Boolean(form?.validationErrors?.password)}
 				bind:disabled={formState.submitting}
+				autocomplete="off"
 			/>
 			<ValidationText error={form?.validationErrors?.password} />
 		</div>
@@ -73,6 +74,7 @@
 				required
 				error={Boolean(form?.validationErrors?.confirmPassword)}
 				bind:disabled={formState.submitting}
+				autocomplete="off"
 			/>
 			<ValidationText error={form?.validationErrors?.confirmPassword} />
 		</div>

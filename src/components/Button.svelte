@@ -61,6 +61,7 @@
 
 <button
 	{...restProps}
+	{disabled}
 	class={clsx(
 		'focus:outline-none',
 		!disabled && 'focus:ring-4',
@@ -100,9 +101,9 @@
 			]
 		],
 		colors.light === color && [
-			disabled && ['bg-white/40 text-gray-900 dark:bg-gray-500 dark:text-white/50'],
+			disabled && ['bg-gray-200 text-gray-900 dark:bg-gray-500 dark:text-white/75'],
 			!disabled && [
-				'border-gray-300 bg-white text-gray-900 hover:bg-gray-100 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700'
+				'border-gray-300 bg-white text-gray-900 hover:bg-gray-300 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700'
 			]
 		],
 		restProps.class
