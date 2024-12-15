@@ -21,19 +21,23 @@
 		handleRedirect?: () => void;
 	} & SvelteHTMLElements['form'] = $props();
 
-	let submitting = $state(false);
+	class FormState {
+		submitting = $state(false);
+	}
+
+	const formState = new FormState();
 </script>
 
 <form
 	{...restProps}
 	method="POST"
 	use:enhance={() => {
-		submitting = true;
+		formState.submitting = true;
 
 		return async (opts) => {
 			const { formData, formElement, action, result, update } = opts;
 
-			submitting = false;
+			formState.submitting = false;
 			if (result.type === 'failure') {
 				if (result.data?.validationErrors) {
 					await applyAction(result);
@@ -64,5 +68,5 @@
 		};
 	}}
 >
-	{@render content({ submitting })}
+	{@render content(formState)}
 </form>

@@ -1,48 +1,38 @@
 import { db } from '$lib/server/db';
-import { count, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
 import { accounts } from '$lib/server/account.schema';
-import { z } from 'zod';
+import { Paginator, searchParamsValidator } from '$lib/server';
+import { like } from 'drizzle-orm';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
-	const user = await locals.getUser();
+	const user = await locals.Passport.getUser();
 
 	if (!user)
 		return Response.json(
-			{ error: 'Unauthorized' },
+			{ message: 'Unauthorized' },
 			{
 				status: 401
 			}
 		);
 
-	const body = Object.fromEntries(url.searchParams.entries());
+	const validatedSearchParams = searchParamsValidator.safeParse(
+		Object.fromEntries(url.searchParams)
+	);
 
-	const result = z
-		.object({
-			page: z.coerce.number().min(1),
-			pageSize: z.coerce.number().min(1).max(100)
-		})
-		.safeParse(body);
+	const { p: page, pz: pageSize, s: search } = validatedSearchParams.data!;
 
-	if (result.error) {
-		return Response.json(
-			{
-				errors: result.error.errors
-			},
-			{
-				status: 400
-			}
-		);
-	}
-
-	const { page, pageSize } = result.data;
-
-	const records = await db
+	const result = await db
 		.select({ count: count(accounts.id) })
 		.from(accounts)
-		.where(eq(accounts.userId, user.id));
+		.where(
+			and(
+				eq(accounts.userId, user.id),
+				search && search.length ? like(accounts.name, `%${search}%`) : undefined
+			)
+		);
 
-	const totalRecords = records[0].count;
+	const totalRecords = result[0].count;
 
 	const data = await db
 		.select({
@@ -50,23 +40,19 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			name: accounts.name
 		})
 		.from(accounts)
-		.where(eq(accounts.userId, user.id))
+		.where(
+			and(
+				eq(accounts.userId, user.id),
+				search && search.length ? like(accounts.name, `%${search}%`) : undefined
+			)
+		)
 		.offset(page * pageSize - pageSize)
 		.limit(pageSize);
 
-	const currentPage = page;
-	const prevPage = currentPage - 1 < 1 ? null : currentPage - 1;
-	const totalPages = Math.ceil(totalRecords / pageSize);
-	const nextPage = currentPage >= totalPages ? null : currentPage + 1;
+	const paginator = new Paginator(page, pageSize, totalRecords);
 
 	return Response.json({
-		pagination: {
-			prevPage,
-			currentPage,
-			nextPage,
-			totalPages,
-			totalRecords
-		},
+		pagination: paginator.toObject(),
 		data
 	});
 };

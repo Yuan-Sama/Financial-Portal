@@ -48,11 +48,13 @@
 	</Button>
 	<span class="text-sm text-gray-700 dark:text-gray-400">
 		<span class="font-semibold text-gray-900 dark:text-white"
-			>{rowsPerPage * (currentPage - 1) + 1}</span
+			>{!currentPage ? 0 : rowsPerPage * (currentPage - 1) + 1}</span
 		>
 		to
 		<span class="font-semibold text-gray-900 dark:text-white"
-			>{rowsPerPage * (currentPage - 1) + Math.min(dataLength, rowsPerPage)}</span
+			>{!currentPage
+				? 0
+				: rowsPerPage * (currentPage - 1) + Math.min(dataLength, rowsPerPage)}</span
 		>
 		of <span class="font-semibold text-gray-900 dark:text-white">{totalRecords}</span>
 	</span>

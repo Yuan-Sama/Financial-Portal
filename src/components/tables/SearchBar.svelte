@@ -1,26 +1,20 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { applyAction } from '$app/forms';
 	import { Icon, Spinner } from '$components';
 	import { Input, Label } from '$components/forms';
-	import type { FormEventHandler } from 'svelte/elements';
 
 	let searching = $state(false);
 
 	let {
-		id = undefined,
-		name = undefined,
+		id = 'search',
+		name = 's',
 		placeholder = undefined,
-		handleSuccess = undefined,
-		oninput = undefined
+		handleNewData
 	}: {
-		id?: string | null;
-		name?: string | null;
-		placeholder?: string | null;
-		oninput?: FormEventHandler<HTMLInputElement> | null | undefined;
-		handleSuccess?: (opts: {
-			update: (options?: { reset?: boolean; invalidateAll?: boolean }) => Promise<void>;
-			successResult: { type: 'success'; status: number; data?: Record<string, unknown> };
-		}) => Promise<void>;
+		id?: string;
+		name?: string;
+		placeholder?: string;
+		handleNewData: (newData: any) => void;
 	} = $props();
 </script>
 
@@ -33,31 +27,43 @@
 		{/if}
 	</div>
 
-	<form
-		action="?/search"
-		method="POST"
-		class="contents"
-		onsubmit={(e) => e.preventDefault()}
-		use:enhance={() => {
-			searching = true;
-
-			return async ({ result, update }) => {
-				searching = false;
-				if (result.type === 'success') {
-					await handleSuccess?.({ update, successResult: { ...result } });
-				}
-			};
-		}}
-	>
+	<div class="contents">
 		<Label for={id} class="sr-only">Search</Label>
 		<Input
 			{name}
 			type="search"
 			class="ps-10 pt-2 lg:w-80"
 			{placeholder}
-			{oninput}
 			{id}
 			disabled={searching}
+			onkeypress={async (event) => {
+				if (event.key === 'Enter') {
+					searching = true;
+
+					const response = await fetch(
+						'/api/accounts?' +
+							new URLSearchParams({
+								p: '1',
+								pz: '5',
+								s: event.currentTarget.value
+							})
+					);
+
+					searching = false;
+
+					if (response.ok) {
+						return handleNewData(await response.json());
+					}
+
+					if (response.status === 401) {
+						await applyAction({
+							type: 'redirect',
+							status: 401,
+							location: '/sign-in'
+						});
+					}
+				}
+			}}
 		/>
-	</form>
+	</div>
 </div>

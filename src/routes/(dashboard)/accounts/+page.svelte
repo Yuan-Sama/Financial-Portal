@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AppName } from '$lib';
+	import { AppName, pageSizeOptions } from '$lib';
 	import type { PageData } from './$types';
 	import { Button, Icon, Pagination } from '$components';
 	import {
@@ -10,11 +10,17 @@
 	} from '$components/sidebars';
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
-	import { DeleteAction, DeleteBulk, RowsSelector, SearchBar, Table } from '$components/tables';
+	import { DeleteAction, DeleteBulk, PageSizeSelector, SearchBar, Table } from '$components/tables';
+	import { AccountSearchParams } from '$lib/account.svelte';
 
 	let { data }: { data: PageData } = $props();
-	let accounts = $state(data.data);
-	let pagination = $state(data.pagination);
+
+	let pageData = $state({
+		accounts: data.data,
+		pagination: data.pagination
+	});
+
+	const accountSearchParams = new AccountSearchParams();
 
 	let showSideBar = $state(false);
 
@@ -38,7 +44,7 @@
 		if (deletedAccounts.length > 1) toastr.success('Accounts deleted');
 		else if (deletedAccounts.length === 1) toastr.success('Account deleted');
 
-		accounts = accounts.filter((a) => !deletedAccounts.includes(a.id));
+		pageData.accounts = pageData.accounts.filter((a) => !deletedAccounts.includes(a.id));
 		selectedRows = {};
 
 		await update();
@@ -68,21 +74,14 @@
 		</div>
 
 		<div class="px-6 pb-6">
-			<Table headings={['Name']} data={accounts}>
+			<Table headings={['Name']} data={pageData.accounts}>
 				{#snippet TopMenu()}
 					<div class="bg-white dark:bg-gray-900">
 						<SearchBar
-							id="search"
-							name="name"
 							placeholder="Search for accounts"
-							oninput={(event) => {
-								if (!event.currentTarget.value.length) {
-									accounts = data.data;
-									return;
-								}
-							}}
-							handleSuccess={async ({ successResult }) => {
-								accounts = successResult.data?.accounts as { id: number; name: string }[];
+							handleNewData={(newData) => {
+								pageData.accounts = newData.data;
+								pageData.pagination = newData.pagination;
 							}}
 						/>
 					</div>
@@ -103,10 +102,10 @@
 							<Input
 								id="check-all"
 								type="checkbox"
-								checked={selectedRowsSize > 0 && selectedRowsSize === accounts.length}
+								checked={selectedRowsSize > 0 && selectedRowsSize === pageData.accounts.length}
 								onchange={(e) => {
 									if (e.currentTarget.checked)
-										selectedRows = accounts.reduce(
+										selectedRows = pageData.accounts.reduce(
 											(obj, a) => Object.assign(obj, { [a.id]: a }),
 											{}
 										);
@@ -164,29 +163,19 @@
 				{#snippet BottomMenu()}
 					<span
 						class="my-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:inline md:w-auto lg:mb-4"
-						>{selectedRowsSize} of {accounts.length} row(s) selected.</span
+						>{selectedRowsSize} of {pageData.accounts.length} row(s) selected.</span
 					>
 					<div class="my-4 inline-flex items-center justify-center">
-						<RowsSelector
-							onchange={async (e) => {
-								rowsPerPage = +e.currentTarget.value;
-								const searchParams = new URLSearchParams({
-									page: '' + 1,
-									pageSize: '' + rowsPerPage
-								});
-								const response = await fetch('/api/accounts?' + searchParams.toString());
-								if (response.ok) {
-									const data = (await response.json()) as {
-										pagination: typeof pagination;
-										data: typeof accounts;
-									};
-									accounts = data.data;
-									pagination = data.pagination;
-								}
+						<PageSizeSelector
+							{pageSizeOptions}
+							bind:currentPageSize={pageData.pagination.pageSize}
+							handleNewData={(newData) => {
+								pageData.accounts = newData.data;
+								pageData.pagination = newData.pagination;
 							}}
 						/>
 						<Pagination
-							{...pagination}
+							{...pageData.pagination}
 							{rowsPerPage}
 							onpagechange={async (page) => {
 								const searchParams = new URLSearchParams({
@@ -196,14 +185,14 @@
 								const response = await fetch('/api/accounts?' + searchParams.toString());
 								if (response.ok) {
 									const data = (await response.json()) as {
-										pagination: typeof pagination;
-										data: typeof accounts;
+										pagination: typeof pageData.pagination;
+										data: typeof pageData.accounts;
 									};
-									accounts = data.data;
-									pagination = data.pagination;
+									pageData.accounts = data.data;
+									pageData.pagination = data.pagination;
 								}
 							}}
-							dataLength={accounts.length}
+							dataLength={pageData.accounts.length}
 						/>
 					</div>
 				{/snippet}
@@ -234,7 +223,7 @@
 
 				if (updatedAccount) {
 					toastr.success('Account updated');
-					const currentAccount = accounts.find((a) => a.id === updatedAccount.id);
+					const currentAccount = pageData.accounts.find((a) => a.id === updatedAccount.id);
 
 					if (currentAccount) {
 						currentAccount.name = updatedAccount.name;
@@ -243,7 +232,7 @@
 					editAccount = undefined;
 				} else {
 					toastr.success('Account created');
-					accounts = data?.accounts as { id: number; name: string }[];
+					pageData.accounts = data?.accounts as { id: number; name: string }[];
 				}
 
 				await update();
