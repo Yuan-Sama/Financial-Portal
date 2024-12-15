@@ -2,7 +2,7 @@
 	import Logo from '$assets/logo.png';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
-	import { AppName } from '$lib';
+	import { AppName } from '$lib/index.svelte';
 	import { page } from '$app/stores';
 	import { SideBar, SideBarCloseButton, SideBarHeading } from '$components/sidebars';
 

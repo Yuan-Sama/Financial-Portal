@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AppName } from '$lib';
+	import { AppName } from '$lib/index.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

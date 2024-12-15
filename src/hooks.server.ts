@@ -1,4 +1,4 @@
-import { AppName } from '$lib';
+import { AppName } from '$lib/index.svelte';
 import { AccessTokenName, Authentication, secret } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { users } from '$lib/server/user.schema';

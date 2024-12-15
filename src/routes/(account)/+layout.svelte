@@ -1,6 +1,6 @@
 <script>
 	import Logo from '$assets/logo.png';
-	import { AppName } from '$lib';
+	import { AppName } from '$lib/index.svelte';
 
 	/**
 	 * @type {{

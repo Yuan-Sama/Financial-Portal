@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AppName, pageSizeOptions } from '$lib';
+	import { AppName, pageSizeOptions, RequestSearchParams } from '$lib/index.svelte';
 	import type { PageData } from './$types';
 	import { Button, Icon, Pagination } from '$components';
 	import {
@@ -11,7 +11,6 @@
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
 	import { DeleteAction, DeleteBulk, PageSizeSelector, SearchBar, Table } from '$components/tables';
-	import { AccountSearchParams } from '$lib/account.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -20,7 +19,7 @@
 		pagination: data.pagination
 	});
 
-	const accountSearchParams = new AccountSearchParams();
+	const accountSearchParams = new RequestSearchParams();
 
 	let showSideBar = $state(false);
 

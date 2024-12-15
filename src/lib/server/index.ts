@@ -1,4 +1,4 @@
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '$lib';
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '$lib/index.svelte';
 import { z } from 'zod';
 
 export class Paginator {

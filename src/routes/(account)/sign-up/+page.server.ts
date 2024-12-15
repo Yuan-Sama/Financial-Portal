@@ -4,7 +4,7 @@ import type { Actions } from './$types';
 import bcrypt from 'bcrypt';
 import { fail, redirect } from '@sveltejs/kit';
 import * as jose from 'jose';
-import { AppName } from '$lib';
+import { AppName } from '$lib/index.svelte';
 import { AccessTokenName, alg, secret } from '$lib/server/auth';
 import { dev } from '$app/environment';
 import { getUserByUsername } from '$lib/server/user';

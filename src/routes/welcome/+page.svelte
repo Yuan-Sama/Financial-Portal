@@ -1,6 +1,6 @@
 <script>
 	import Marketing from '$assets/marketing.jpg';
-	import { AppName } from '$lib';
+	import { AppName } from '$lib/index.svelte';
 
 	/**
 	 * @type {{
