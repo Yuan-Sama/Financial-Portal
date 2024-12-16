@@ -108,7 +108,7 @@ export const actions: Actions = {
 
 		const result = z.number().array().safeParse(JSON.parse(rawData.ids).map(Number));
 
-		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+		// if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
 
 		if (result.error) {
 			return fail(400, {

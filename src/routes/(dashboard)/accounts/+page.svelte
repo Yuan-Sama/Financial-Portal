@@ -10,7 +10,7 @@
 	} from '$components/sidebars';
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
-	import { DeleteAction, DeleteBulk, PageSizeSelector, SearchBar, Table } from '$components/tables';
+	import { DeleteButton, PageSizeSelector, SearchBar, Table } from '$components/tables';
 	import { applyAction } from '$app/forms';
 
 	let { data }: { data: PageData } = $props();
@@ -19,11 +19,7 @@
 		accounts: data.data,
 		pagination: data.pagination
 	});
-
-	const accountSearchParams = new RequestSearchParams();
-
 	let showSideBar = $state(false);
-
 	let editAccount = $state() as
 		| {
 				id: number;
@@ -33,11 +29,11 @@
 	let selectedRows = $state({}) as { [id: number]: { id: number; name: string } };
 	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
 
+	const accountSearchParams = new RequestSearchParams();
+
 	$effect(() => {
 		if (!showSideBar && editAccount) editAccount = undefined;
 	});
-
-	let rowsPerPage = $state(5);
 </script>
 
 <svelte:head>
@@ -65,8 +61,8 @@
 				{#snippet TopMenu()}
 					<div class="bg-white dark:bg-gray-900">
 						<SearchBar
-							placeholder="Search for accounts"
 							url="/api/accounts"
+							placeholder="Search for accounts"
 							requestSearchParams={accountSearchParams}
 							onsuccess={(newData) => {
 								pageData.accounts = newData.data;
@@ -76,20 +72,20 @@
 					</div>
 
 					{#if selectedRowsSize > 0}
-						<DeleteBulk
-							set={(formData) => formData.set('ids', JSON.stringify(Object.keys(selectedRows)))}
-							handleSuccess={async ({ successResult, update }) => {
-								const data = successResult.data as any;
+						<DeleteButton
+							action={`?/delete&${accountSearchParams.toString()}`}
+							deleteIds={Object.keys(selectedRows)}
+							onsuccess={async (result) => {
+								const data = result.data as any;
 
 								pageData.accounts = data.data;
 								pageData.pagination = data.pagination;
 
 								toastr.success('Accounts deleted');
-								await update();
 							}}
 						>
 							Delete ({selectedRowsSize})
-						</DeleteBulk>
+						</DeleteButton>
 					{/if}
 				{/snippet}
 				{#snippet BeforeColumnLoop()}
@@ -148,16 +144,17 @@
 							>
 								<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
 							</button>
-							<DeleteAction
-								set={(formData) => formData.set('ids', JSON.stringify([account.id]))}
-								handleSuccess={async ({ successResult, update }) => {
-									const data = successResult.data as any;
+							<DeleteButton
+								type="icon"
+								action={`?/delete&${accountSearchParams.toString()}`}
+								deleteIds={[account.id]}
+								onsuccess={async (result) => {
+									const data = result.data as any;
 
 									pageData.accounts = data.data;
 									pageData.pagination = data.pagination;
 
 									toastr.success('Account deleted');
-									await update();
 								}}
 							/>
 						</div>
@@ -179,31 +176,12 @@
 							}}
 						/>
 						<Pagination
+							url="/api/accounts"
 							{...pageData.pagination}
-							{rowsPerPage}
-							onpagechange={async (page) => {
-								if (!page) return;
-
-								accountSearchParams.page = page;
-								const response = await fetch(`/api/accounts?${accountSearchParams.toString()}`);
-
-								if (response.ok) {
-									const data = (await response.json()) as {
-										pagination: typeof pageData.pagination;
-										data: typeof pageData.accounts;
-									};
-									pageData.accounts = data.data;
-									pageData.pagination = data.pagination;
-									return;
-								}
-
-								if (response.status === 401) {
-									await applyAction({
-										type: 'redirect',
-										status: 401,
-										location: '/sign-in'
-									});
-								}
+							requestSearchParams={accountSearchParams}
+							onsuccess={async (data) => {
+								pageData.accounts = data.data;
+								pageData.pagination = data.pagination;
 							}}
 							dataLength={pageData.accounts.length}
 						/>

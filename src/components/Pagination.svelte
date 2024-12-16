@@ -1,25 +1,48 @@
 <script lang="ts">
+	import { applyAction } from '$app/forms';
 	import { Button, Icon } from '$components';
+	import type { RequestSearchParams } from '$lib/index.svelte';
 
 	let {
+		url,
 		prevPage,
 		currentPage,
 		nextPage,
 		totalPages,
-		onpagechange,
 		dataLength,
 		totalRecords,
-		rowsPerPage
+		requestSearchParams,
+		onsuccess
 	}: {
+		url: string;
 		prevPage: null | number;
 		currentPage: number;
 		nextPage: null | number;
 		totalPages: number;
-		onpagechange: (page: number | null) => Promise<void>;
 		dataLength: number;
 		totalRecords: number;
-		rowsPerPage: number;
+		requestSearchParams: RequestSearchParams;
+		onsuccess: (data: any) => Promise<void>;
 	} = $props();
+
+	async function onpagechange(page: number | null) {
+		if (!page) return;
+
+		requestSearchParams.page = page;
+		const response = await fetch(`${url}?${requestSearchParams.toString()}`);
+
+		if (response.ok) {
+			return await onsuccess(await response.json());
+		}
+
+		if (response.status === 401) {
+			return await applyAction({
+				type: 'redirect',
+				status: 401,
+				location: '/sign-in'
+			});
+		}
+	}
 </script>
 
 <div class="inline-flex items-center justify-center gap-x-2">
@@ -48,13 +71,14 @@
 	</Button>
 	<span class="text-sm text-gray-700 dark:text-gray-400">
 		<span class="font-semibold text-gray-900 dark:text-white"
-			>{!currentPage ? 0 : rowsPerPage * (currentPage - 1) + 1}</span
+			>{!currentPage ? 0 : requestSearchParams.pageSize * (currentPage - 1) + 1}</span
 		>
 		to
 		<span class="font-semibold text-gray-900 dark:text-white"
 			>{!currentPage
 				? 0
-				: rowsPerPage * (currentPage - 1) + Math.min(dataLength, rowsPerPage)}</span
+				: requestSearchParams.pageSize * (currentPage - 1) +
+					Math.min(dataLength, requestSearchParams.pageSize)}</span
 		>
 		of <span class="font-semibold text-gray-900 dark:text-white">{totalRecords}</span>
 	</span>

@@ -4,7 +4,6 @@ import { z } from 'zod';
 export class Paginator {
 	#currentPage: number = 1;
 	#prevPage: number | null = null;
-	#pageSize: number = 5;
 	#totalPages: number = 1;
 	#totalRecords: number = 0;
 	#nextPage: number | null = null;
@@ -16,9 +15,7 @@ export class Paginator {
 
 		this.#totalRecords = totalRecords;
 
-		this.#pageSize = pageSize;
-
-		this.#totalPages = !this.#pageSize ? 0 : Math.ceil(this.#totalRecords / this.#pageSize);
+		this.#totalPages = !pageSize ? 0 : Math.ceil(this.#totalRecords / pageSize);
 
 		this.#nextPage = this.#currentPage >= this.#totalPages ? null : this.#currentPage + 1;
 	}
@@ -43,17 +40,12 @@ export class Paginator {
 		return this.#nextPage;
 	}
 
-	get pageSize() {
-		return this.#pageSize;
-	}
-
 	toObject() {
 		return {
 			prevPage: this.#prevPage,
 			currentPage: this.#currentPage,
 			nextPage: this.#nextPage,
 			totalPages: this.#totalPages,
-			pageSize: this.#pageSize,
 			totalRecords: this.#totalRecords
 		};
 	}
