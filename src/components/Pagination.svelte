@@ -71,11 +71,11 @@
 	</Button>
 	<span class="text-sm text-gray-700 dark:text-gray-400">
 		<span class="font-semibold text-gray-900 dark:text-white"
-			>{!currentPage ? 0 : requestSearchParams.pageSize * (currentPage - 1) + 1}</span
+			>{!totalRecords ? 0 : requestSearchParams.pageSize * (currentPage - 1) + 1}</span
 		>
 		to
 		<span class="font-semibold text-gray-900 dark:text-white"
-			>{!currentPage
+			>{!totalRecords
 				? 0
 				: requestSearchParams.pageSize * (currentPage - 1) +
 					Math.min(dataLength, requestSearchParams.pageSize)}</span

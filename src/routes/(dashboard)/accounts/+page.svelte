@@ -11,7 +11,6 @@
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
 	import { DeleteButton, PageSizeSelector, SearchBar, Table } from '$components/tables';
-	import { applyAction } from '$app/forms';
 
 	let { data }: { data: PageData } = $props();
 
@@ -73,7 +72,9 @@
 
 					{#if selectedRowsSize > 0}
 						<DeleteButton
-							action={`?/delete&${accountSearchParams.toString()}`}
+							action="?/delete"
+							totalRecords={pageData.pagination.totalRecords}
+							requestSearchParams={accountSearchParams}
 							deleteIds={Object.keys(selectedRows)}
 							onsuccess={async (result) => {
 								const data = result.data as any;
@@ -146,7 +147,9 @@
 							</button>
 							<DeleteButton
 								type="icon"
-								action={`?/delete&${accountSearchParams.toString()}`}
+								action="?/delete"
+								totalRecords={pageData.pagination.totalRecords}
+								requestSearchParams={accountSearchParams}
 								deleteIds={[account.id]}
 								onsuccess={async (result) => {
 									const data = result.data as any;

@@ -2,18 +2,23 @@
 	import { enhance } from '$app/forms';
 	import { Button, Icon } from '$components';
 	import { toastr } from '$components/toasts';
+	import type { RequestSearchParams } from '$lib/index.svelte';
 	import type { Snippet } from 'svelte';
 
 	let {
 		action,
 		deleteIds,
 		type = 'button',
+		requestSearchParams,
+		totalRecords,
 		onsuccess = undefined,
 		children = undefined
 	}: {
 		action: string;
 		deleteIds: any[];
 		type?: 'button' | 'icon';
+		requestSearchParams: RequestSearchParams;
+		totalRecords: number;
 		onsuccess?: (successResult: {
 			type: 'success';
 			status: number;
@@ -28,7 +33,17 @@
 	{action}
 	method="POST"
 	class="contents"
-	use:enhance={({ formData }) => {
+	use:enhance={({ formData, action }) => {
+		const deletedCount = deleteIds.length;
+		const newTotalRecords = totalRecords - deletedCount;
+		const newTotalPages = Math.ceil(newTotalRecords / requestSearchParams.pageSize);
+
+		if (requestSearchParams.page > newTotalPages) requestSearchParams.page = newTotalPages;
+
+		for (let [key, val] of requestSearchParams.toURLSearchParams().entries()) {
+			action.searchParams.set(key, val);
+		}
+
 		formData.set('ids', JSON.stringify(deleteIds));
 
 		return async ({ update, result }) => {
