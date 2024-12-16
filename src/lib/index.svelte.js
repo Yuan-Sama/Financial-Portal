@@ -15,9 +15,12 @@ export class RequestSearchParams {
 	constructor() {}
 
 	toString() {
-		return new URLSearchParams({
-			page: this.page.toString(),
-			pageSize: this.pageSize.toString()
-		}).toString();
+		const urlSearchParams = new URLSearchParams();
+
+		if (this.page) urlSearchParams.append('p', this.page.toString());
+		if (this.pageSize) urlSearchParams.append('pz', this.pageSize.toString());
+		if (this.search && this.search.length) urlSearchParams.append('s', this.search);
+
+		return urlSearchParams.toString();
 	}
 }

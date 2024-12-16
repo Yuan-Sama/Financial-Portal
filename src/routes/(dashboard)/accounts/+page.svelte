@@ -11,6 +11,7 @@
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
 	import { DeleteAction, DeleteBulk, PageSizeSelector, SearchBar, Table } from '$components/tables';
+	import { applyAction } from '$app/forms';
 
 	let { data }: { data: PageData } = $props();
 
@@ -35,19 +36,6 @@
 	$effect(() => {
 		if (!showSideBar && editAccount) editAccount = undefined;
 	});
-
-	async function deleteSelectedAccounts(
-		deletedAccounts: number[],
-		update: { (options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>; (): any }
-	) {
-		if (deletedAccounts.length > 1) toastr.success('Accounts deleted');
-		else if (deletedAccounts.length === 1) toastr.success('Account deleted');
-
-		pageData.accounts = pageData.accounts.filter((a) => !deletedAccounts.includes(a.id));
-		selectedRows = {};
-
-		await update();
-	}
 
 	let rowsPerPage = $state(5);
 </script>
@@ -78,7 +66,9 @@
 					<div class="bg-white dark:bg-gray-900">
 						<SearchBar
 							placeholder="Search for accounts"
-							handleNewData={(newData) => {
+							url="/api/accounts"
+							requestSearchParams={accountSearchParams}
+							onsuccess={(newData) => {
 								pageData.accounts = newData.data;
 								pageData.pagination = newData.pagination;
 							}}
@@ -88,8 +78,15 @@
 					{#if selectedRowsSize > 0}
 						<DeleteBulk
 							set={(formData) => formData.set('ids', JSON.stringify(Object.keys(selectedRows)))}
-							handleSuccess={async ({ successResult, update }) =>
-								deleteSelectedAccounts(successResult.data!.deletedAccounts as number[], update)}
+							handleSuccess={async ({ successResult, update }) => {
+								const data = successResult.data as any;
+
+								pageData.accounts = data.data;
+								pageData.pagination = data.pagination;
+
+								toastr.success('Accounts deleted');
+								await update();
+							}}
 						>
 							Delete ({selectedRowsSize})
 						</DeleteBulk>
@@ -152,9 +149,16 @@
 								<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
 							</button>
 							<DeleteAction
-								set={(formData) => formData.set('id', `${account.id}`)}
-								handleSuccess={async ({ successResult, update }) =>
-									deleteSelectedAccounts(successResult.data!.deletedAccounts as number[], update)}
+								set={(formData) => formData.set('ids', JSON.stringify([account.id]))}
+								handleSuccess={async ({ successResult, update }) => {
+									const data = successResult.data as any;
+
+									pageData.accounts = data.data;
+									pageData.pagination = data.pagination;
+
+									toastr.success('Account deleted');
+									await update();
+								}}
 							/>
 						</div>
 					</td>
@@ -167,8 +171,9 @@
 					<div class="my-4 inline-flex items-center justify-center">
 						<PageSizeSelector
 							{pageSizeOptions}
-							bind:currentPageSize={pageData.pagination.pageSize}
-							handleNewData={(newData) => {
+							url="/api/accounts"
+							requestSearchParams={accountSearchParams}
+							onsuccess={(newData) => {
 								pageData.accounts = newData.data;
 								pageData.pagination = newData.pagination;
 							}}
@@ -177,11 +182,11 @@
 							{...pageData.pagination}
 							{rowsPerPage}
 							onpagechange={async (page) => {
-								const searchParams = new URLSearchParams({
-									page: '' + page,
-									pageSize: '' + rowsPerPage
-								});
-								const response = await fetch('/api/accounts?' + searchParams.toString());
+								if (!page) return;
+
+								accountSearchParams.page = page;
+								const response = await fetch(`/api/accounts?${accountSearchParams.toString()}`);
+
 								if (response.ok) {
 									const data = (await response.json()) as {
 										pagination: typeof pageData.pagination;
@@ -189,6 +194,15 @@
 									};
 									pageData.accounts = data.data;
 									pageData.pagination = data.pagination;
+									return;
+								}
+
+								if (response.status === 401) {
+									await applyAction({
+										type: 'redirect',
+										status: 401,
+										location: '/sign-in'
+									});
 								}
 							}}
 							dataLength={pageData.accounts.length}
@@ -213,26 +227,21 @@
 		{/if}
 
 		<Form
-			action={editAccount ? '?/edit' : '?/create'}
-			handleSuccess={async ({ successResult, update }) => {
+			action={(editAccount ? '?/edit' : '?/create') + `&${accountSearchParams.toString()}`}
+			onsuccess={async ({ successResult, update }) => {
 				showSideBar = false;
 
-				const { data } = successResult;
-				const updatedAccount = data?.updatedAccount as { id: number; name: string } | undefined;
+				const data = successResult.data!;
 
-				if (updatedAccount) {
+				if (editAccount) {
 					toastr.success('Account updated');
-					const currentAccount = pageData.accounts.find((a) => a.id === updatedAccount.id);
-
-					if (currentAccount) {
-						currentAccount.name = updatedAccount.name;
-					}
-
 					editAccount = undefined;
 				} else {
 					toastr.success('Account created');
-					pageData.accounts = data?.accounts as { id: number; name: string }[];
 				}
+
+				pageData.accounts = data.data;
+				pageData.pagination = data.pagination;
 
 				await update();
 			}}

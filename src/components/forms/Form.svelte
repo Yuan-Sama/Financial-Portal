@@ -6,12 +6,12 @@
 
 	let {
 		content,
-		handleSuccess = undefined,
+		onsuccess = undefined,
 		handleRedirect = undefined,
 		...restProps
 	}: {
 		content: Snippet<[formState: { submitting: boolean }]>;
-		handleSuccess?: (opts: {
+		onsuccess?: (opts: {
 			formData: FormData;
 			formElement: HTMLFormElement;
 			action: URL;
@@ -58,7 +58,7 @@
 				return await applyAction(result);
 			}
 
-			return await handleSuccess?.({
+			return await onsuccess?.({
 				formData,
 				formElement,
 				action,

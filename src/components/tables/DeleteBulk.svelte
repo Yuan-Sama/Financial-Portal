@@ -5,7 +5,7 @@
 	import type { Snippet } from 'svelte';
 
 	let {
-		action = '?/deleteBulk',
+		action = '?/delete',
 		set = undefined,
 		handleSuccess = undefined,
 		children = undefined

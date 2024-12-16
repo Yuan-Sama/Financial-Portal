@@ -2,19 +2,20 @@
 	import { applyAction } from '$app/forms';
 	import { Icon, Spinner } from '$components';
 	import { Input, Label } from '$components/forms';
+	import type { RequestSearchParams } from '$lib/index.svelte';
 
 	let searching = $state(false);
 
 	let {
-		id = 'search',
-		name = 's',
+		url,
+		requestSearchParams,
 		placeholder = undefined,
-		handleNewData
+		onsuccess = undefined
 	}: {
-		id?: string;
-		name?: string;
+		url: string;
+		requestSearchParams: RequestSearchParams;
 		placeholder?: string;
-		handleNewData: (newData: any) => void;
+		onsuccess?: (newData: any) => void;
 	} = $props();
 </script>
 
@@ -28,31 +29,25 @@
 	</div>
 
 	<div class="contents">
-		<Label for={id} class="sr-only">Search</Label>
+		<Label for="SearchBar" class="sr-only">Search</Label>
 		<Input
-			{name}
+			id="SearchBar"
 			type="search"
 			class="ps-10 pt-2 lg:w-80"
 			{placeholder}
-			{id}
 			disabled={searching}
 			onkeypress={async (event) => {
 				if (event.key === 'Enter') {
+					requestSearchParams.page = 1;
+					requestSearchParams.search = event.currentTarget.value;
 					searching = true;
 
-					const response = await fetch(
-						'/api/accounts?' +
-							new URLSearchParams({
-								p: '1',
-								pz: '5',
-								s: event.currentTarget.value
-							})
-					);
+					const response = await fetch(`${url}?${requestSearchParams.toString()}`);
 
 					searching = false;
 
 					if (response.ok) {
-						return handleNewData(await response.json());
+						return onsuccess?.(await response.json());
 					}
 
 					if (response.status === 401) {

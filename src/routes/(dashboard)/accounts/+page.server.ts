@@ -3,51 +3,18 @@ import { db } from '$lib/server/db';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { dev } from '$app/environment';
-import { and, count, eq, inArray, like } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
-import { Paginator, searchParamsValidator } from '$lib/server';
+import { getPagingAccount } from '$lib/server/account';
 
 export const load = (async ({ parent, url }) => {
 	const user = (await parent()).user;
 
-	const validatedSearchParams = searchParamsValidator.safeParse(
-		Object.fromEntries(url.searchParams)
-	);
-
-	const { p: page, pz: pageSize, s: search } = validatedSearchParams.data!;
-
-	const result = await db
-		.select({ count: count(accounts.id) })
-		.from(accounts)
-		.where(
-			and(
-				eq(accounts.userId, user.id),
-				search && search.length ? like(accounts.name, `%${search}%`) : undefined
-			)
-		);
-
-	const totalRecords = result[0].count;
-
-	const data = await db
-		.select({
-			id: accounts.id,
-			name: accounts.name
-		})
-		.from(accounts)
-		.where(
-			and(
-				eq(accounts.userId, user.id),
-				search && search.length ? like(accounts.name, `%${search}%`) : undefined
-			)
-		)
-		.offset(page * pageSize - pageSize)
-		.limit(pageSize);
-
-	const paginator = new Paginator(page, pageSize, totalRecords);
+	const pagingAccount = await getPagingAccount(url, user);
 
 	return {
-		pagination: paginator.toObject(),
-		data
+		pagination: pagingAccount.pagination,
+		data: pagingAccount.data
 	};
 }) satisfies PageServerLoad;
 
@@ -86,11 +53,11 @@ export const actions: Actions = {
 			})
 			.where(and(eq(accounts.userId, user.id), eq(accounts.id, result.data.id!)));
 
+		const pagingAccount = await getPagingAccount(url, user);
+
 		return {
-			updatedAccount: {
-				id: result.data.id,
-				name: result.data.name
-			}
+			pagination: pagingAccount.pagination,
+			data: pagingAccount.data
 		};
 	},
 
@@ -124,16 +91,11 @@ export const actions: Actions = {
 			name: name
 		});
 
-		const accs = await db
-			.select({
-				id: accounts.id,
-				name: accounts.name
-			})
-			.from(accounts)
-			.where(eq(accounts.userId, user.id));
+		const pagingAccount = await getPagingAccount(url, user);
 
 		return {
-			accounts: accs
+			pagination: pagingAccount.pagination,
+			data: pagingAccount.data
 		};
 	},
 
@@ -146,7 +108,7 @@ export const actions: Actions = {
 
 		const result = z.number().array().safeParse(JSON.parse(rawData.ids).map(Number));
 
-		// if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
 
 		if (result.error) {
 			return fail(400, {
@@ -154,15 +116,15 @@ export const actions: Actions = {
 			});
 		}
 
-		const data = await db
+		await db
 			.delete(accounts)
-			.where(and(eq(accounts.userId, user.id), inArray(accounts.id, result.data)))
-			.returning({
-				id: accounts.id
-			});
+			.where(and(eq(accounts.userId, user.id), inArray(accounts.id, result.data)));
+
+		const pagingAccount = await getPagingAccount(url, user);
 
 		return {
-			deletedAccounts: data.map((a) => a.id)
+			pagination: pagingAccount.pagination,
+			data: pagingAccount.data
 		};
 	}
 };
