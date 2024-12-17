@@ -40,8 +40,7 @@
 			formState.submitting = false;
 			if (result.type === 'failure') {
 				if (result.data?.validationErrors) {
-					await applyAction(result);
-					return;
+					return await applyAction(result);
 				}
 
 				toastr.error(result.data?.error);

@@ -56,7 +56,16 @@
 		</div>
 
 		<div class="px-6 pb-6">
-			<Table headings={['Name']} data={pageData.accounts}>
+			<Table
+				url="/api/accounts"
+				headings={[{ name: 'Name' }]}
+				data={pageData.accounts}
+				requestSearchParams={accountSearchParams}
+				onsuccess={async (data) => {
+					pageData.accounts = data.data;
+					pageData.pagination = data.pagination;
+				}}
+			>
 				{#snippet TopMenu()}
 					<div class="bg-white dark:bg-gray-900">
 						<SearchBar
@@ -81,6 +90,8 @@
 
 								pageData.accounts = data.data;
 								pageData.pagination = data.pagination;
+
+								selectedRows = {};
 
 								toastr.success('Accounts deleted');
 							}}

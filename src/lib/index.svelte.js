@@ -11,6 +11,10 @@ export class RequestSearchParams {
 	 * @type {string | null | undefined}
 	 */
 	search = $state();
+	/**
+	 * @type {string | undefined}
+	 */
+	sort = $state();
 
 	constructor() {}
 
@@ -24,6 +28,7 @@ export class RequestSearchParams {
 		if (this.page) urlSearchParams.append('p', this.page.toString());
 		if (this.pageSize) urlSearchParams.append('pz', this.pageSize.toString());
 		if (this.search && this.search.length) urlSearchParams.append('s', this.search);
+		if (this.sort) urlSearchParams.set('o', this.sort);
 
 		return urlSearchParams;
 	}

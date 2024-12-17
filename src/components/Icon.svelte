@@ -9,7 +9,10 @@
 		| 'chevrons-left'
 		| 'chevrons-right'
 		| 'chevron-left'
-		| 'chevron-right';
+		| 'chevron-right'
+		| 'sort-up'
+		| 'sort-down'
+		| 'no-sort';
 
 	let { icon, ...restProps }: { icon: Icon } & SvelteHTMLElements['svg'] = $props();
 </script>
@@ -48,5 +51,11 @@
 		<path d="M10.296 7.71 14.621 12l-4.325 4.29 1.408 1.42L17.461 12l-5.757-5.71z"></path><path
 			d="M6.704 6.29 5.296 7.71 9.621 12l-4.325 4.29 1.408 1.42L12.461 12z"
 		></path>
+	{:else if icon === 'no-sort'}
+		<path d="M7 20h2V8h3L8 4 4 8h3zm13-4h-3V4h-2v12h-3l4 4z"></path>
+	{:else if icon === 'sort-up'}
+		<path d="M11 9h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5zm-6 3h2V8h3L6 4 2 8h3z"></path>
+	{:else if icon === 'sort-down'}
+		<path d="m6 20 4-4H7V4H5v12H2zm5-12h9v2h-9zm0 4h7v2h-7zm0-8h11v2H11zm0 12h5v2h-5z"></path>
 	{/if}
 </svg>

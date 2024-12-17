@@ -38,7 +38,7 @@
 			}
 
 			if (response.status === 401) {
-				await applyAction({
+				return await applyAction({
 					type: 'redirect',
 					status: 401,
 					location: '/sign-in'

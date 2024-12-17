@@ -68,5 +68,6 @@ export const searchParamsValidator = z.object({
 
 			return val;
 		}),
-	s: z.coerce.string().trim().default('')
+	s: z.coerce.string().trim().default(''),
+	o: z.string().toLowerCase().default('')
 });
