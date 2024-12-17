@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { applyAction } from '$app/forms';
-	import { Button, Icon } from '$components';
+	import { Button, Icon } from '$components/base';
 	import type { RequestSearchParams } from '$lib/index.svelte';
 
 	let {
@@ -12,7 +12,7 @@
 		dataLength,
 		totalRecords,
 		requestSearchParams,
-		onsuccess
+		onsuccess = undefined
 	}: {
 		url: string;
 		prevPage: null | number;
@@ -22,7 +22,7 @@
 		dataLength: number;
 		totalRecords: number;
 		requestSearchParams: RequestSearchParams;
-		onsuccess: (data: any) => Promise<void>;
+		onsuccess?: (data: any) => Promise<void> | void;
 	} = $props();
 
 	async function onpagechange(page: number | null) {
@@ -32,7 +32,7 @@
 		const response = await fetch(`${url}?${requestSearchParams.toString()}`);
 
 		if (response.ok) {
-			return await onsuccess(await response.json());
+			return await onsuccess?.(await response.json());
 		}
 
 		if (response.status === 401) {
@@ -46,7 +46,6 @@
 </script>
 
 <div class="inline-flex items-center justify-center gap-x-2">
-	<!-- Buttons -->
 	<Button
 		color="light"
 		size="sm"

@@ -1,16 +1,10 @@
-<script>
+<script lang="ts">
 	import clsx from 'clsx';
+	import type { SvelteHTMLElements } from 'svelte/elements';
 
-	/**
-	 * @typedef Size
-	 * @type {"base" | "xs" | "sm" | "lg" | "xl"}
-	 *
-	 * @typedef Color
-	 * @type {"primary" | "red" | "light"}
-	 *
-	 * @typedef Shape
-	 * @type {"default" | "pill" | "round"}
-	 */
+	type Size = 'base' | 'xs' | 'sm' | 'lg' | 'xl';
+	type Color = 'primary' | 'red' | 'light';
+	type Shape = 'default' | 'pill' | 'round';
 
 	const sizes = {
 		xs: 'xs',
@@ -32,17 +26,6 @@
 		round: 'round'
 	};
 
-	/**
-	 * @type {{
-	 * 	color?: Color,
-	 * 	size?: Size,
-	 * 	shape?: Shape,
-	 *  outline?: boolean,
-	 *  noborder?: boolean,
-	 * 	disabled?: boolean,
-	 * 	children: import('svelte').Snippet
-	 * } & import('svelte/elements').HTMLButtonAttributes}
-	 */
 	let {
 		color = 'primary',
 		size = 'base',
@@ -52,11 +35,19 @@
 		disabled = $bindable(false),
 		children,
 		...restProps
-	} = $props();
+	}: {
+		color?: Color;
+		size?: Size;
+		shape?: Shape;
+		outline?: boolean;
+		noborder?: boolean;
+		disabled?: boolean;
+		children: import('svelte').Snippet;
+	} & SvelteHTMLElements['button'] = $props();
 
-	size = /** @type {Size} */ (sizes[size] ?? sizes.base);
-	color = /** @type {Color} */ (colors[color] ?? colors.primary);
-	shape = /** @type {Shape} */ (shapes[shape] ?? shapes.default);
+	size = (sizes[size] ?? sizes.base) as Size;
+	color = (colors[color] ?? colors.primary) as Color;
+	shape = (shapes[shape] ?? shapes.default) as Shape;
 </script>
 
 <button

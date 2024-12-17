@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button, Icon } from '$components';
+	import { Button, Icon } from '$components/base';
 	import { toastr } from '$components/toasts';
 	import type { RequestSearchParams } from '$lib/index.svelte';
 	import type { Snippet } from 'svelte';

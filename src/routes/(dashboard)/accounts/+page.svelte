@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { AppName, pageSizeOptions, RequestSearchParams } from '$lib/index.svelte';
 	import type { PageData } from './$types';
-	import { Button, Icon, Pagination } from '$components';
 	import {
 		SideBar,
 		SideBarCloseButton,
@@ -10,7 +9,18 @@
 	} from '$components/sidebars';
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
-	import { DeleteButton, PageSizeSelector, SearchBar, Table } from '$components/tables';
+	import {
+		DataTable,
+		DataTableBody,
+		DataTableDeleteButton,
+		DataTableHead,
+		DataTableHeading,
+		DataTablePageSizeSelector,
+		DataTablePagination,
+		DataTableSearch,
+		DataTableWrapper
+	} from '$components/datatables';
+	import { Button, Icon } from '$components/base';
 
 	let { data }: { data: PageData } = $props();
 
@@ -33,6 +43,8 @@
 	$effect(() => {
 		if (!showSideBar && editAccount) editAccount = undefined;
 	});
+
+	const headings = [{ name: 'Name', field: 'name' }];
 </script>
 
 <svelte:head>
@@ -56,152 +68,143 @@
 		</div>
 
 		<div class="px-6 pb-6">
-			<Table
-				url="/api/accounts"
-				headings={[{ name: 'Name' }]}
-				data={pageData.accounts}
+			<DataTableWrapper
 				requestSearchParams={accountSearchParams}
-				onsuccess={async (data) => {
-					pageData.accounts = data.data;
-					pageData.pagination = data.pagination;
+				onsuccess={(newData) => {
+					pageData.accounts = newData.data;
+					pageData.pagination = newData.pagination;
 				}}
 			>
-				{#snippet TopMenu()}
+				{#snippet top(requestSearchParams, onsuccess)}
 					<div class="bg-white dark:bg-gray-900">
-						<SearchBar
+						<DataTableSearch
 							url="/api/accounts"
 							placeholder="Search for accounts"
-							requestSearchParams={accountSearchParams}
-							onsuccess={(newData) => {
-								pageData.accounts = newData.data;
-								pageData.pagination = newData.pagination;
-							}}
+							{requestSearchParams}
+							{onsuccess}
 						/>
 					</div>
 
 					{#if selectedRowsSize > 0}
-						<DeleteButton
+						<DataTableDeleteButton
 							action="?/delete"
 							totalRecords={pageData.pagination.totalRecords}
 							requestSearchParams={accountSearchParams}
 							deleteIds={Object.keys(selectedRows)}
 							onsuccess={async (result) => {
-								const data = result.data as any;
-
-								pageData.accounts = data.data;
-								pageData.pagination = data.pagination;
-
+								await onsuccess?.(result.data);
 								selectedRows = {};
-
 								toastr.success('Accounts deleted');
 							}}
 						>
 							Delete ({selectedRowsSize})
-						</DeleteButton>
+						</DataTableDeleteButton>
 					{/if}
 				{/snippet}
-				{#snippet BeforeColumnLoop()}
-					<th scope="col" class="p-4">
-						<div class="flex items-center">
-							<Input
-								id="check-all"
-								type="checkbox"
-								checked={selectedRowsSize > 0 && selectedRowsSize === pageData.accounts.length}
-								onchange={(e) => {
-									if (e.currentTarget.checked)
-										selectedRows = pageData.accounts.reduce(
-											(obj, a) => Object.assign(obj, { [a.id]: a }),
-											{}
-										);
-									else selectedRows = {};
-								}}
-								class="size-4 cursor-pointer"
-								aria-label="Select all"
-							/>
-							<Label for="check-all" class="sr-only">checkbox</Label>
-						</div>
-					</th>
+				{#snippet table(requestSearchParams, onsuccess)}
+					<DataTable {headings}>
+						<DataTableHead {headings}>
+							{#snippet before()}
+								<th scope="col" class="p-4">
+									<div class="flex items-center">
+										<Input
+											id="check-all"
+											type="checkbox"
+											checked={selectedRowsSize > 0 &&
+												selectedRowsSize === pageData.accounts.length}
+											onchange={(e) => {
+												if (e.currentTarget.checked)
+													selectedRows = pageData.accounts.reduce(
+														(obj, a) => Object.assign(obj, { [a.id]: a }),
+														{}
+													);
+												else selectedRows = {};
+											}}
+											class="size-4 cursor-pointer"
+											aria-label="Select all"
+										/>
+										<Label for="check-all" class="sr-only">checkbox</Label>
+									</div>
+								</th>
+							{/snippet}
+							{#snippet th(heading)}
+								<DataTableHeading api="/api/accounts" {heading} {requestSearchParams} {onsuccess} />
+							{/snippet}
+							{#snippet after()}
+								<th scope="col">Action</th>
+							{/snippet}
+						</DataTableHead>
+						<DataTableBody data={pageData.accounts}>
+							{#snippet td(account)}
+								<td class="w-4 p-4">
+									<div class="flex items-center">
+										<Input
+											id="checkbox-{account.id}"
+											type="checkbox"
+											checked={Boolean(selectedRows[account.id])}
+											onchange={(e) => {
+												if (e.currentTarget.checked) {
+													selectedRows[account.id] = account;
+												} else if (!e.currentTarget.checked && selectedRows[account.id]) {
+													delete selectedRows[account.id];
+												}
+											}}
+											class="size-4 cursor-pointer"
+										/>
+										<Label for="checkbox-{account.id}" class="sr-only">Select {account.name}</Label>
+									</div>
+								</td>
+								<td class="px-5 py-3">{account.name}</td>
+								<td class="w-2/12">
+									<div class="flex items-center justify-center gap-x-3 px-6 py-4 text-right">
+										<button
+											onclick={() => {
+												editAccount = account;
+												showSideBar = true;
+											}}
+											title="Edit"
+										>
+											<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
+										</button>
+										<DataTableDeleteButton
+											type="icon"
+											action="?/delete"
+											totalRecords={pageData.pagination.totalRecords}
+											{requestSearchParams}
+											deleteIds={[account.id]}
+											onsuccess={async (result) => {
+												await onsuccess?.(result.data);
+												toastr.success('Account deleted');
+											}}
+										/>
+									</div>
+								</td>
+							{/snippet}
+						</DataTableBody>
+					</DataTable>
 				{/snippet}
-				{#snippet AfterColumnLoop()}
-					<th scope="col">Action</th>
-				{/snippet}
-				{#snippet Row(account)}
-					<td class="w-4 p-4">
-						<div class="flex items-center">
-							<Input
-								id="checkbox-{account.id}"
-								type="checkbox"
-								checked={Boolean(selectedRows[account.id])}
-								onchange={(e) => {
-									if (e.currentTarget.checked) {
-										selectedRows[account.id] = account;
-									} else if (!e.currentTarget.checked && selectedRows[account.id]) {
-										delete selectedRows[account.id];
-									}
-								}}
-								class="size-4 cursor-pointer"
-							/>
-							<Label for="checkbox-{account.id}" class="sr-only">Select {account.name}</Label>
-						</div>
-					</td>
-					<td class="px-5 py-3">{account.name}</td>
-					<td class="w-2/12">
-						<div class="flex items-center justify-center gap-x-3 px-6 py-4 text-right">
-							<button
-								onclick={() => {
-									editAccount = account;
-									showSideBar = true;
-								}}
-								title="Edit"
-							>
-								<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
-							</button>
-							<DeleteButton
-								type="icon"
-								action="?/delete"
-								totalRecords={pageData.pagination.totalRecords}
-								requestSearchParams={accountSearchParams}
-								deleteIds={[account.id]}
-								onsuccess={async (result) => {
-									const data = result.data as any;
-
-									pageData.accounts = data.data;
-									pageData.pagination = data.pagination;
-
-									toastr.success('Account deleted');
-								}}
-							/>
-						</div>
-					</td>
-				{/snippet}
-				{#snippet BottomMenu()}
+				{#snippet bottom(requestSearchParams, onsuccess)}
 					<span
 						class="my-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:inline md:w-auto lg:mb-4"
 						>{selectedRowsSize} of {pageData.accounts.length} row(s) selected.</span
 					>
 					<div class="my-4 inline-flex items-center justify-center">
-						<PageSizeSelector
+						<DataTablePageSizeSelector
 							{pageSizeOptions}
 							url="/api/accounts"
-							requestSearchParams={accountSearchParams}
-							onsuccess={(newData) => {
-								pageData.accounts = newData.data;
-								pageData.pagination = newData.pagination;
-							}}
+							{requestSearchParams}
+							{onsuccess}
 						/>
-						<Pagination
+						<DataTablePagination
 							url="/api/accounts"
 							{...pageData.pagination}
-							requestSearchParams={accountSearchParams}
-							onsuccess={async (data) => {
-								pageData.accounts = data.data;
-								pageData.pagination = data.pagination;
-							}}
+							{requestSearchParams}
+							{onsuccess}
 							dataLength={pageData.accounts.length}
 						/>
 					</div>
 				{/snippet}
-			</Table>
+			</DataTableWrapper>
 		</div>
 	</div>
 </div>

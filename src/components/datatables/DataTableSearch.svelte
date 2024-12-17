@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { applyAction } from '$app/forms';
-	import { Icon, Spinner } from '$components';
+	import { Icon, Spinner } from '$components/base';
 	import { Input, Label } from '$components/forms';
 	import type { RequestSearchParams } from '$lib/index.svelte';
 
@@ -15,7 +15,7 @@
 		url: string;
 		requestSearchParams: RequestSearchParams;
 		placeholder?: string;
-		onsuccess?: (newData: any) => void;
+		onsuccess?: (newData: any) => Promise<void> | void;
 	} = $props();
 </script>
 
@@ -47,7 +47,7 @@
 					searching = false;
 
 					if (response.ok) {
-						return onsuccess?.(await response.json());
+						if (onsuccess) return await onsuccess(await response.json());
 					}
 
 					if (response.status === 401) {

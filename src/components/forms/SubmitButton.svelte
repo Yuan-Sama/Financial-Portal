@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, Spinner } from '$components';
+	import { Button, Spinner } from '$components/base';
 	import type { Snippet } from 'svelte';
 
 	let {

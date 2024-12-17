@@ -14,7 +14,7 @@
 		url: string;
 		requestSearchParams: RequestSearchParams;
 		label?: string;
-		onsuccess?: (newData: any) => void;
+		onsuccess?: (newData: any) => Promise<void> | void;
 	} = $props();
 </script>
 
@@ -34,7 +34,7 @@
 			const response = await fetch(`${url}?${requestSearchParams.toString()}`);
 
 			if (response.ok) {
-				return onsuccess?.(await response.json());
+				return await onsuccess?.(await response.json());
 			}
 
 			if (response.status === 401) {
