@@ -3,12 +3,8 @@
 
 	let {
 		headings,
-		before = undefined,
-		after = undefined,
 		th
 	}: {
-		before?: Snippet;
-		after?: Snippet;
 		headings: { name: string; sortable?: boolean }[];
 		th: Snippet<
 			[
@@ -23,10 +19,8 @@
 
 <thead class="bg-gray-100 dark:bg-gray-800">
 	<tr>
-		{@render before?.()}
 		{#each headings as heading (heading)}
 			{@render th(heading)}
 		{/each}
-		{@render after?.()}
 	</tr>
 </thead>

@@ -25,7 +25,7 @@
 
 	type Account = { id: number; name: string };
 
-	const headings = [{ name: 'Name' }];
+	const headings = [{ name: 'Select All' }, { name: 'Name' }, { name: 'Action' }];
 	const pageSizeOptions = [5, 10, 15, 20, 25];
 
 	let pageData = $state({
@@ -105,28 +105,33 @@
 					</DataTableTop>
 					<DataTable>
 						<DataTableHead {headings}>
-							{#snippet before()}
-								<th scope="col" class="p-4">
-									<DataTableSelectRows
-										id="select-all"
-										checked={rowsSelector.size == data.length}
-										screenReader="Select all"
-										onchange={(e) => {
-											rowsSelector.rows = !e.currentTarget.checked
-												? {}
-												: data.reduce((obj, a) => Object.assign(obj, { [a.id]: a }), {});
-										}}
-									/>
-								</th>
-							{/snippet}
 							{#snippet th(heading)}
-								<DataTableHeading api="/api/accounts" {heading} {requestSearchParams} {onsuccess} />
-							{/snippet}
-							{#snippet after()}
-								<th scope="col">Action</th>
+								{#if heading.name === 'Select All'}
+									<th scope="col" class="w-[1%] p-4">
+										<DataTableSelectRows
+											id="select-all"
+											checked={data.length > 0 && rowsSelector.size == data.length}
+											screenReader={heading.name}
+											onchange={(e) => {
+												rowsSelector.rows = !e.currentTarget.checked
+													? {}
+													: data.reduce((obj, a) => Object.assign(obj, { [a.id]: a }), {});
+											}}
+										/>
+									</th>
+								{:else if heading.name === 'Action'}
+									<th scope="col">{heading.name}</th>
+								{:else}
+									<DataTableHeading
+										api="/api/accounts"
+										{heading}
+										{requestSearchParams}
+										{onsuccess}
+									/>
+								{/if}
 							{/snippet}
 						</DataTableHead>
-						<DataTableBody {data}>
+						<DataTableBody {data} colsCount={headings.length}>
 							{#snippet td(account)}
 								<td class="w-4 p-4">
 									<DataTableSelectRows
@@ -143,29 +148,27 @@
 									/>
 								</td>
 								<td class="px-5 py-3">{account.name}</td>
-								<td class="w-2/12">
-									<div class="flex items-center justify-center gap-x-3 px-6 py-4 text-right">
-										<button
-											onclick={() => {
-												editAccount = account;
-												showSideBar = true;
-											}}
-											title="Edit"
-										>
-											<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
-										</button>
-										<DataTableDeleteButton
-											type="icon"
-											url="?/delete"
-											totalRecords={pageData.pagination.totalRecords}
-											{requestSearchParams}
-											deleteIds={[account.id]}
-											onsuccess={async (newData) => {
-												await onsuccess?.(newData);
-												toastr.success('Account deleted');
-											}}
-										/>
-									</div>
+								<td class="flex items-center justify-center gap-x-3 px-5 py-3 text-right">
+									<button
+										onclick={() => {
+											editAccount = account;
+											showSideBar = true;
+										}}
+										title="Edit"
+									>
+										<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
+									</button>
+									<DataTableDeleteButton
+										type="icon"
+										url="?/delete"
+										totalRecords={pageData.pagination.totalRecords}
+										{requestSearchParams}
+										deleteIds={[account.id]}
+										onsuccess={async (newData) => {
+											await onsuccess?.(newData);
+											toastr.success('Account deleted');
+										}}
+									/>
 								</td>
 							{/snippet}
 						</DataTableBody>
