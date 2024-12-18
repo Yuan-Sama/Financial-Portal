@@ -19,11 +19,7 @@
 		type?: 'button' | 'icon';
 		requestSearchParams: RequestSearchParams;
 		totalRecords: number;
-		onsuccess?: (successResult: {
-			type: 'success';
-			status: number;
-			data?: Record<string, any>;
-		}) => Promise<void>;
+		onsuccess?: (newData: any) => Promise<void>;
 		children?: Snippet;
 	} = $props();
 </script>
@@ -53,7 +49,7 @@
 			}
 
 			if (result.type === 'success') {
-				await onsuccess?.(result);
+				await onsuccess?.(result.data);
 				return await update();
 			}
 		};

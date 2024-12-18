@@ -16,7 +16,8 @@
 		DataTableDeleteButton,
 		DataTablePageSizeSelector,
 		DataTablePagination,
-		DataTableSearch
+		DataTableSearch,
+		DataTableSelectRows
 	} from '$components/datatables/actions';
 	import { DataTableBody, DataTableHead, DataTableHeading } from '$components/datatables/tables';
 
@@ -24,17 +25,16 @@
 
 	type Account = { id: number; name: string };
 
-	const headings = [{ name: 'Name', field: 'name' }];
+	const headings = [{ name: 'Name' }];
 	const pageSizeOptions = [5, 10, 15, 20, 25];
 
 	let pageData = $state({
 		accounts: data.data,
 		pagination: data.pagination
 	});
+
 	let showSideBar = $state(false);
 	let editAccount: Account | undefined = $state();
-	let selectedRows: { [id: number]: Account } = $state({});
-	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
 
 	const accountSearchParams = new RequestSearchParams();
 
@@ -76,7 +76,7 @@
 					pageData.pagination = newData.pagination;
 				}}
 			>
-				{#snippet content(headings, data, requestSearchParams, onsuccess)}
+				{#snippet content(headings, data, requestSearchParams, rowsSelector, onsuccess)}
 					<DataTableTop>
 						<div class="bg-white dark:bg-gray-900">
 							<DataTableSearch
@@ -87,19 +87,19 @@
 							/>
 						</div>
 
-						{#if selectedRowsSize > 0}
+						{#if rowsSelector.size > 0}
 							<DataTableDeleteButton
 								url="?/delete"
 								totalRecords={pageData.pagination.totalRecords}
 								requestSearchParams={accountSearchParams}
-								deleteIds={Object.keys(selectedRows)}
-								onsuccess={async (result) => {
-									await onsuccess?.(result.data);
-									selectedRows = {};
+								deleteIds={Object.keys(rowsSelector.rows)}
+								onsuccess={async (newData) => {
+									await onsuccess?.(newData);
+									rowsSelector.rows = {};
 									toastr.success('Accounts deleted');
 								}}
 							>
-								Delete ({selectedRowsSize})
+								Delete ({rowsSelector.size})
 							</DataTableDeleteButton>
 						{/if}
 					</DataTableTop>
@@ -107,25 +107,16 @@
 						<DataTableHead {headings}>
 							{#snippet before()}
 								<th scope="col" class="p-4">
-									<div class="flex items-center">
-										<Input
-											id="check-all"
-											type="checkbox"
-											checked={selectedRowsSize > 0 &&
-												selectedRowsSize === pageData.accounts.length}
-											onchange={(e) => {
-												if (e.currentTarget.checked)
-													selectedRows = pageData.accounts.reduce(
-														(obj, a) => Object.assign(obj, { [a.id]: a }),
-														{}
-													);
-												else selectedRows = {};
-											}}
-											class="size-4 cursor-pointer"
-											aria-label="Select all"
-										/>
-										<Label for="check-all" class="sr-only">checkbox</Label>
-									</div>
+									<DataTableSelectRows
+										id="select-all"
+										checked={rowsSelector.size == data.length}
+										screenReader="Select all"
+										onchange={(e) => {
+											rowsSelector.rows = !e.currentTarget.checked
+												? {}
+												: data.reduce((obj, a) => Object.assign(obj, { [a.id]: a }), {});
+										}}
+									/>
 								</th>
 							{/snippet}
 							{#snippet th(heading)}
@@ -138,22 +129,18 @@
 						<DataTableBody {data}>
 							{#snippet td(account)}
 								<td class="w-4 p-4">
-									<div class="flex items-center">
-										<Input
-											id="checkbox-{account.id}"
-											type="checkbox"
-											checked={Boolean(selectedRows[account.id])}
-											onchange={(e) => {
-												if (e.currentTarget.checked) {
-													selectedRows[account.id] = account;
-												} else if (!e.currentTarget.checked && selectedRows[account.id]) {
-													delete selectedRows[account.id];
-												}
-											}}
-											class="size-4 cursor-pointer"
-										/>
-										<Label for="checkbox-{account.id}" class="sr-only">Select {account.name}</Label>
-									</div>
+									<DataTableSelectRows
+										id="select-{account.id}"
+										checked={Boolean(rowsSelector.rows[account.id])}
+										screenReader="Select account {account.id}"
+										onchange={(e) => {
+											if (e.currentTarget.checked) {
+												rowsSelector.rows[account.id] = account;
+											} else if (!e.currentTarget.checked && rowsSelector.rows[account.id]) {
+												delete rowsSelector.rows[account.id];
+											}
+										}}
+									/>
 								</td>
 								<td class="px-5 py-3">{account.name}</td>
 								<td class="w-2/12">
@@ -173,8 +160,8 @@
 											totalRecords={pageData.pagination.totalRecords}
 											{requestSearchParams}
 											deleteIds={[account.id]}
-											onsuccess={async (result) => {
-												await onsuccess?.(result.data);
+											onsuccess={async (newData) => {
+												await onsuccess?.(newData);
 												toastr.success('Account deleted');
 											}}
 										/>
@@ -186,7 +173,7 @@
 					<DataTableBottom>
 						<span
 							class="my-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:inline md:w-auto lg:mb-4"
-							>{selectedRowsSize} of {pageData.accounts.length} row(s) selected.</span
+							>{rowsSelector.size} of {data.length} row(s) selected.</span
 						>
 						<div class="my-4 inline-flex items-center justify-center">
 							<DataTablePageSizeSelector
@@ -200,7 +187,7 @@
 								{...pageData.pagination}
 								{requestSearchParams}
 								{onsuccess}
-								dataLength={pageData.accounts.length}
+								dataLength={data.length}
 							/>
 						</div>
 					</DataTableBottom>

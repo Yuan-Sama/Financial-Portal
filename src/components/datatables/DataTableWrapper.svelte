@@ -18,12 +18,20 @@
 				headings: Heading[],
 				data: TData[],
 				requestSearchParams: RequestSearchParams,
+				rowsSelector: typeof rowsSelector,
 				onsuccess?: (newData: any) => Promise<void> | void
 			]
 		>;
 		onsuccess?: (newData: any) => Promise<void> | void;
 		requestSearchParams: RequestSearchParams;
 	} = $props();
+
+	class RowsSelector {
+		rows: { [idx: number]: TData } = $state({});
+		size = $derived(Object.keys(this.rows).length);
+	}
+
+	const rowsSelector = new RowsSelector();
 </script>
 
-{@render content(headings, data, requestSearchParams, onsuccess)}
+{@render content(headings, data, requestSearchParams, rowsSelector, onsuccess)}
