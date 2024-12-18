@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AppName, pageSizeOptions, RequestSearchParams } from '$lib/index.svelte';
+	import { AppName, RequestSearchParams } from '$lib/index.svelte';
 	import type { PageData } from './$types';
 	import {
 		SideBar,
@@ -9,33 +9,31 @@
 	} from '$components/sidebars';
 	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { toastr } from '$components/toasts';
+	import { Button, Icon } from '$components/base';
+	import { DataTable, DataTableBottom, DataTableTop } from '$components/datatables/blocks';
+	import { DataTableWrapper } from '$components/datatables';
 	import {
-		DataTable,
-		DataTableBody,
 		DataTableDeleteButton,
-		DataTableHead,
-		DataTableHeading,
 		DataTablePageSizeSelector,
 		DataTablePagination,
-		DataTableSearch,
-		DataTableWrapper
-	} from '$components/datatables';
-	import { Button, Icon } from '$components/base';
+		DataTableSearch
+	} from '$components/datatables/actions';
+	import { DataTableBody, DataTableHead, DataTableHeading } from '$components/datatables/tables';
 
 	let { data }: { data: PageData } = $props();
+
+	type Account = { id: number; name: string };
+
+	const headings = [{ name: 'Name', field: 'name' }];
+	const pageSizeOptions = [5, 10, 15, 20, 25];
 
 	let pageData = $state({
 		accounts: data.data,
 		pagination: data.pagination
 	});
 	let showSideBar = $state(false);
-	let editAccount = $state() as
-		| {
-				id: number;
-				name: string;
-		  }
-		| undefined;
-	let selectedRows = $state({}) as { [id: number]: { id: number; name: string } };
+	let editAccount: Account | undefined = $state();
+	let selectedRows: { [id: number]: Account } = $state({});
 	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
 
 	const accountSearchParams = new RequestSearchParams();
@@ -43,8 +41,6 @@
 	$effect(() => {
 		if (!showSideBar && editAccount) editAccount = undefined;
 	});
-
-	const headings = [{ name: 'Name', field: 'name' }];
 </script>
 
 <svelte:head>
@@ -69,40 +65,45 @@
 
 		<div class="px-6 pb-6">
 			<DataTableWrapper
+				{headings}
+				data={pageData.accounts}
 				requestSearchParams={accountSearchParams}
-				onsuccess={(newData) => {
+				onsuccess={(newData: {
+					data: typeof pageData.accounts;
+					pagination: typeof pageData.pagination;
+				}) => {
 					pageData.accounts = newData.data;
 					pageData.pagination = newData.pagination;
 				}}
 			>
-				{#snippet top(requestSearchParams, onsuccess)}
-					<div class="bg-white dark:bg-gray-900">
-						<DataTableSearch
-							url="/api/accounts"
-							placeholder="Search for accounts"
-							{requestSearchParams}
-							{onsuccess}
-						/>
-					</div>
+				{#snippet content(headings, data, requestSearchParams, onsuccess)}
+					<DataTableTop>
+						<div class="bg-white dark:bg-gray-900">
+							<DataTableSearch
+								url="/api/accounts"
+								placeholder="Search for accounts"
+								{requestSearchParams}
+								{onsuccess}
+							/>
+						</div>
 
-					{#if selectedRowsSize > 0}
-						<DataTableDeleteButton
-							action="?/delete"
-							totalRecords={pageData.pagination.totalRecords}
-							requestSearchParams={accountSearchParams}
-							deleteIds={Object.keys(selectedRows)}
-							onsuccess={async (result) => {
-								await onsuccess?.(result.data);
-								selectedRows = {};
-								toastr.success('Accounts deleted');
-							}}
-						>
-							Delete ({selectedRowsSize})
-						</DataTableDeleteButton>
-					{/if}
-				{/snippet}
-				{#snippet table(requestSearchParams, onsuccess)}
-					<DataTable {headings}>
+						{#if selectedRowsSize > 0}
+							<DataTableDeleteButton
+								url="?/delete"
+								totalRecords={pageData.pagination.totalRecords}
+								requestSearchParams={accountSearchParams}
+								deleteIds={Object.keys(selectedRows)}
+								onsuccess={async (result) => {
+									await onsuccess?.(result.data);
+									selectedRows = {};
+									toastr.success('Accounts deleted');
+								}}
+							>
+								Delete ({selectedRowsSize})
+							</DataTableDeleteButton>
+						{/if}
+					</DataTableTop>
+					<DataTable>
 						<DataTableHead {headings}>
 							{#snippet before()}
 								<th scope="col" class="p-4">
@@ -134,7 +135,7 @@
 								<th scope="col">Action</th>
 							{/snippet}
 						</DataTableHead>
-						<DataTableBody data={pageData.accounts}>
+						<DataTableBody {data}>
 							{#snippet td(account)}
 								<td class="w-4 p-4">
 									<div class="flex items-center">
@@ -168,7 +169,7 @@
 										</button>
 										<DataTableDeleteButton
 											type="icon"
-											action="?/delete"
+											url="?/delete"
 											totalRecords={pageData.pagination.totalRecords}
 											{requestSearchParams}
 											deleteIds={[account.id]}
@@ -182,27 +183,27 @@
 							{/snippet}
 						</DataTableBody>
 					</DataTable>
-				{/snippet}
-				{#snippet bottom(requestSearchParams, onsuccess)}
-					<span
-						class="my-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:inline md:w-auto lg:mb-4"
-						>{selectedRowsSize} of {pageData.accounts.length} row(s) selected.</span
-					>
-					<div class="my-4 inline-flex items-center justify-center">
-						<DataTablePageSizeSelector
-							{pageSizeOptions}
-							url="/api/accounts"
-							{requestSearchParams}
-							{onsuccess}
-						/>
-						<DataTablePagination
-							url="/api/accounts"
-							{...pageData.pagination}
-							{requestSearchParams}
-							{onsuccess}
-							dataLength={pageData.accounts.length}
-						/>
-					</div>
+					<DataTableBottom>
+						<span
+							class="my-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:inline md:w-auto lg:mb-4"
+							>{selectedRowsSize} of {pageData.accounts.length} row(s) selected.</span
+						>
+						<div class="my-4 inline-flex items-center justify-center">
+							<DataTablePageSizeSelector
+								{pageSizeOptions}
+								url="/api/accounts"
+								{requestSearchParams}
+								{onsuccess}
+							/>
+							<DataTablePagination
+								url="/api/accounts"
+								{...pageData.pagination}
+								{requestSearchParams}
+								{onsuccess}
+								dataLength={pageData.accounts.length}
+							/>
+						</div>
+					</DataTableBottom>
 				{/snippet}
 			</DataTableWrapper>
 		</div>
@@ -241,7 +242,7 @@
 				await update();
 			}}
 		>
-			{#snippet content(formState)}
+			{#snippet content(state)}
 				{#if editAccount}
 					<input type="number" hidden name="id" value={editAccount.id} />
 				{/if}
@@ -253,10 +254,10 @@
 					value={editAccount?.name}
 					id="name"
 					name="name"
-					bind:disabled={formState.submitting}
+					bind:disabled={state.submitting}
 				/>
 
-				<SubmitButton bind:disabled={formState.submitting}>
+				<SubmitButton bind:disabled={state.submitting}>
 					{editAccount ? 'Save changes' : 'Create account'}
 				</SubmitButton>
 			{/snippet}

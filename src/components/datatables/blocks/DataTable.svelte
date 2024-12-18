@@ -1,10 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	let {
-		children,
-		headings
-	}: { headings: { name: string; sortable?: boolean }[]; children: Snippet } = $props();
+	let { children }: { children: Snippet } = $props();
 </script>
 
 <table

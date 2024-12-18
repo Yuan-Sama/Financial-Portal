@@ -6,7 +6,7 @@
 	import type { Snippet } from 'svelte';
 
 	let {
-		action,
+		url: action,
 		deleteIds,
 		type = 'button',
 		requestSearchParams,
@@ -14,7 +14,7 @@
 		onsuccess = undefined,
 		children = undefined
 	}: {
-		action: string;
+		url: string;
 		deleteIds: any[];
 		type?: 'button' | 'icon';
 		requestSearchParams: RequestSearchParams;
