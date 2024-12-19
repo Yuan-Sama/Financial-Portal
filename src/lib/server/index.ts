@@ -1,5 +1,9 @@
-import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '$lib/index.svelte';
 import { z } from 'zod';
+
+export const CookiesAccessTokenName = 'access';
+
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 5;
 
 export class Paginator {
 	#currentPage: number = 1;

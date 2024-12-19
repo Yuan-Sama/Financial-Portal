@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { AppName, RequestSearchParams } from '$lib/index.svelte';
 	import type { PageData } from './$types';
 	import {
 		SideBar,
@@ -20,6 +19,8 @@
 		DataTableSelectRows
 	} from '$components/datatables/actions';
 	import { DataTableBody, DataTableHead, DataTableHeading } from '$components/datatables/tables';
+	import { RequestSearchParams } from '$lib/request.svelte';
+	import { AppName } from '$lib';
 
 	let { data }: { data: PageData } = $props();
 

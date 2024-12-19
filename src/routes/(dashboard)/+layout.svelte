@@ -2,9 +2,9 @@
 	import Logo from '$assets/logo.png';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
-	import { AppName } from '$lib/index.svelte';
 	import { page } from '$app/stores';
 	import { SideBar, SideBarCloseButton, SideBarHeading } from '$components/sidebars';
+	import { AppName } from '$lib';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 

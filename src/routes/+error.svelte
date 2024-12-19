@@ -1,7 +1,7 @@
 <script>
 	import Logo from '$assets/logo.png';
 	import { page } from '$app/stores';
-	import { AppName } from '$lib/index.svelte';
+	import { AppName } from '$lib';
 </script>
 
 <svelte:head>

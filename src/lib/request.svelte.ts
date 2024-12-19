@@ -1,21 +1,13 @@
-export const AppName = 'Financial Portal';
-
-export const DEFAULT_PAGE = 1;
-export const DEFAULT_PAGE_SIZE = 5;
-
 export class RequestSearchParams {
-	page = $state(DEFAULT_PAGE);
-	pageSize = $state(DEFAULT_PAGE_SIZE);
-	/**
-	 * @type {string | null | undefined}
-	 */
-	search = $state();
-	/**
-	 * @type {string | undefined}
-	 */
-	sort = $state();
+	page: number = $state(1);
+	pageSize: number = $state(5);
+	search: string | null | undefined = $state();
+	sort: string | undefined | null = $state();
 
-	constructor() {}
+	constructor(page = 1, pageSize = 5) {
+		this.page = page;
+		this.pageSize = pageSize;
+	}
 
 	toString() {
 		return this.toURLSearchParams().toString();

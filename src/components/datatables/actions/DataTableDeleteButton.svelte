@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { Button, Icon } from '$components/base';
 	import { toastr } from '$components/toasts';
-	import type { RequestSearchParams } from '$lib/index.svelte';
+	import type { RequestSearchParams } from '$lib/request.svelte';
 	import type { Snippet } from 'svelte';
 
 	let {

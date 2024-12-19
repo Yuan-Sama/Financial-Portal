@@ -1,9 +1,9 @@
 import { and, asc, count, desc, eq, like, SQL } from 'drizzle-orm';
 import { Paginator, searchParamsValidator } from '.';
-import { accounts } from './account.schema';
 import { db } from './db';
-import type { User } from './user.schema';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
+import { accounts, type User } from './db.schema';
+import { z } from 'zod';
 
 export async function getPagingAccount(url: URL, user: User) {
 	const validatedSearchParams = searchParamsValidator.safeParse(
@@ -59,3 +59,19 @@ export async function getPagingAccount(url: URL, user: User) {
 		data
 	};
 }
+
+export const editAccountValidator = z.object({
+	id: z.coerce
+		.number({ required_error: 'id is required' })
+		.min(1, { message: 'id must be greater than 0' }),
+	name: z.string({ required_error: 'name is required' }).min(1, { message: 'name cannot be empty' })
+});
+
+export const createAccountValidator = z.object({
+	name: z
+		.string({ required_error: 'Name is required' })
+		.trim()
+		.min(1, { message: 'Name can not be empty' })
+});
+
+export const deleteAccountValidator = z.number().array();

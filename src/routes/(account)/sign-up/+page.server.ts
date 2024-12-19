@@ -1,75 +1,61 @@
-import { db } from '$lib/server/db';
-import { signUpSchema, users } from '$lib/server/user.schema';
 import type { Actions } from './$types';
-import bcrypt from 'bcrypt';
 import { fail, redirect } from '@sveltejs/kit';
-import * as jose from 'jose';
-import { AppName } from '$lib/index.svelte';
-import { AccessTokenName, alg, secret } from '$lib/server/auth';
 import { dev } from '$app/environment';
-import { getUserByUsername } from '$lib/server/user';
+import { createUser, getUserByUsername, signUpValidator } from '$lib/server/user';
+import { delay } from '$lib/server/development';
+import { createAccessToken, lifeTimeMillis } from '$lib/server/auth';
+import { CookiesAccessTokenName } from '$lib/server';
 
-const saltRounds = 12;
+type ValidationErrors = { username?: string; password?: string; confirmPassword?: string };
 
 export const actions: Actions = {
 	default: async ({ request, cookies, url }) => {
 		const formData = await request.formData();
-		const rawData = Object.fromEntries(formData);
 
-		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000)); // Stimulate long request
+		if (dev) {
+			console.log('formData:', formData);
+			// Stimulate long request
+			await delay(1, 2);
+		}
 
-		const result = signUpSchema.safeParse(rawData);
+		const result = signUpValidator.safeParse(Object.fromEntries(formData));
 		if (result.error) {
-			const validationErrors = result.error.errors.reduce(
+			const validationErrors: ValidationErrors = result.error.errors.reduce(
 				(obj, e) => Object.assign(obj, { [e.path[0]]: e.message }),
 				{}
-			) as { username?: string; password?: string; confirmPassword?: string };
+			);
+
 			return fail(400, { validationErrors });
 		}
 
-		const existedUser = await getUserByUsername(result.data.username);
-		if (existedUser)
-			return fail(400, {
-				validationErrors: {
-					username: 'User exists'
-				} as { username?: string; password?: string; confirmPassword?: string }
-			});
+		const { username, password } = result.data;
 
-		try {
-			const user = (
-				await db
-					.insert(users)
-					.values({
-						username: result.data.username,
-						password: await bcrypt.hash(result.data.password, saltRounds)
-					})
-					.returning()
-			)[0];
+		const existedUser = await getUserByUsername(username);
+		if (existedUser) {
+			const validationErrors: ValidationErrors = {
+				username: 'User exists'
+			};
 
-			const lifeTimeMillis = Date.now() + 3600 * 1000;
-
-			const accessToken = await new jose.SignJWT({ id: user.id })
-				.setProtectedHeader({ alg })
-				.setIssuedAt()
-				.setIssuer(AppName)
-				.setAudience(AppName)
-				.setExpirationTime(Math.floor(lifeTimeMillis / 1000))
-				.sign(secret);
-
-			cookies.set(AccessTokenName, accessToken, {
-				secure: !dev,
-				path: '/',
-				httpOnly: !dev,
-				expires: new Date(lifeTimeMillis)
-			});
-		} catch (err) {
-			console.error(err);
-			return fail(400, {
-				error: 'Unknown error happens during sign up'
-			});
+			return fail(400, { validationErrors });
 		}
 
-		const returnTo = url.searchParams.get('returnTo');
+		const user = await createUser(username, password);
+
+		if (!user)
+			return fail(400, {
+				error: 'Cannot create user'
+			});
+
+		const accessToken = await createAccessToken({ id: user.id });
+
+		cookies.set(CookiesAccessTokenName, accessToken, {
+			secure: !dev,
+			path: '/',
+			httpOnly: !dev,
+			expires: new Date(lifeTimeMillis)
+		});
+
+		const returnTo = url.searchParams.get('next');
 		if (returnTo) redirect(303, decodeURIComponent(returnTo));
 
 		redirect(303, '/');

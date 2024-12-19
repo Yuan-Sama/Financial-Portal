@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { applyAction } from '$app/forms';
 	import { Label } from '$components/forms';
-	import type { RequestSearchParams } from '$lib/index.svelte';
+	import type { RequestSearchParams } from '$lib/request.svelte';
 
 	let {
 		pageSizeOptions,

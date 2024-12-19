@@ -1,11 +1,15 @@
-import { accounts } from '$lib/server/account.schema';
 import { db } from '$lib/server/db';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { dev } from '$app/environment';
 import { and, eq, inArray } from 'drizzle-orm';
-import { z } from 'zod';
-import { getPagingAccount } from '$lib/server/account';
+import {
+	createAccountValidator,
+	deleteAccountValidator,
+	editAccountValidator,
+	getPagingAccount
+} from '$lib/server/account';
+import { accounts } from '$lib/server/db.schema';
 
 export const load = (async ({ parent, url }) => {
 	const user = (await parent()).user;
@@ -23,22 +27,15 @@ export const actions: Actions = {
 		const user = await locals.Passport.getUser();
 		if (!user) redirect(303, `/sign-in?next=${encodeURI(url.href)}`);
 
-		const rawData = Object.fromEntries(await request.formData());
+		const formData = await request.formData();
 
-		const result = z
-			.object({
-				id: z.coerce
-					.number({ required_error: 'id is required' })
-					.min(1, { message: 'id must be greater than 0' }),
-				name: z
-					.string({ required_error: 'name is required' })
-					.min(1, { message: 'name cannot be empty' })
-			})
-			.safeParse(rawData);
+		const result = editAccountValidator.safeParse(Object.fromEntries(formData));
 
 		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
 
 		if (result.error) {
+			console.log(result.error);
+
 			return fail(400, {
 				error: result.error.errors[0].message
 			});
@@ -65,20 +62,15 @@ export const actions: Actions = {
 		const user = await locals.Passport.getUser();
 		if (!user) redirect(303, `/sign-in?next=${encodeURI(url.href)}`);
 
-		const rawData = Object.fromEntries(await request.formData());
+		const formData = await request.formData();
 
-		const result = z
-			.object({
-				name: z
-					.string({ required_error: 'Name is required' })
-					.trim()
-					.min(1, { message: 'Name can not be empty' })
-			})
-			.safeParse(rawData);
+		const result = createAccountValidator.safeParse(Object.fromEntries(formData));
 
 		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
 
 		if (result.error) {
+			console.log(result.error);
+
 			return fail(400, {
 				error: result.error.errors[0].message
 			});
@@ -104,13 +96,15 @@ export const actions: Actions = {
 		if (!user) redirect(303, `/sign-in?next=${encodeURI(url.href)}`);
 
 		const formData = await request.formData();
-		const rawData = Object.fromEntries(formData) as { ids: string };
+		const obj = Object.fromEntries(formData) as { ids: string };
 
-		const result = z.number().array().safeParse(JSON.parse(rawData.ids).map(Number));
+		const result = deleteAccountValidator.safeParse(JSON.parse(obj.ids).map(Number));
 
 		// if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
 
 		if (result.error) {
+			console.log(result.error);
+
 			return fail(400, {
 				error: result.error.errors[0].message
 			});

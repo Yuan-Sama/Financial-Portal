@@ -1,5 +1,5 @@
 <script lang="ts" generics="TData">
-	import type { RequestSearchParams } from '$lib/index.svelte';
+	import type { RequestSearchParams } from '$lib/request.svelte';
 	import type { Snippet } from 'svelte';
 
 	type Heading = { name: string; sortable?: boolean };

@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { Form, Input, Label, SubmitButton, ValidationText } from '$components/forms';
 	import { toastr } from '$components/toasts';
-	import { AppName } from '$lib/index.svelte';
+	import { AppName } from '$lib';
 	import type { ActionData } from './$types';
 
 	const { searchParams } = $page.url;

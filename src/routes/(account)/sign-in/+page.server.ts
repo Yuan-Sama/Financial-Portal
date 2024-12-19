@@ -1,56 +1,41 @@
 import type { Actions } from './$types';
-import bcrypt from 'bcrypt';
 import { fail, redirect } from '@sveltejs/kit';
-import * as jose from 'jose';
-import { AppName } from '$lib/index.svelte';
-import { AccessTokenName, alg, secret } from '$lib/server/auth';
 import { dev } from '$app/environment';
-import { getUserByUsername } from '$lib/server/user';
-import { signInSchema } from '$lib/server/user.schema';
-
-async function signIn(username: string, password: string) {
-	const user = await getUserByUsername(username);
-	if (!user) return undefined;
-
-	const passwordsMatch = await bcrypt.compare(password, user.password);
-	if (!passwordsMatch) return undefined;
-
-	return user;
-}
+import { checkPassword, getUserByUsername, signInValidator } from '$lib/server/user';
+import { delay } from '$lib/server/development';
+import { createAccessToken, lifeTimeMillis } from '$lib/server/auth';
+import { CookiesAccessTokenName } from '$lib/server';
 
 export const actions: Actions = {
 	default: async ({ request, cookies, url }) => {
 		const formData = await request.formData();
-		const rawData = Object.fromEntries(formData);
 
-		const result = signInSchema.safeParse(rawData);
+		if (dev) {
+			console.log('formData:', formData);
+			// Stimulate long request
+			await delay(1, 2);
+		}
 
-		if (dev)
-			await new Promise((fullfill) => setTimeout(fullfill, Math.floor(Math.random() * 2001))); // Stimulate long request
-
+		const result = signInValidator.safeParse(Object.fromEntries(formData));
 		if (result.error) return fail(400, { error: 'Email or password incorrect' });
 
-		const user = await signIn(result.data.username, result.data.password);
+		const { username, password } = result.data;
+
+		const user = await getUserByUsername(username);
 		if (!user) return fail(400, { error: 'Email or password incorrect' });
 
-		const lifeTimeMillis = Date.now() + 3600 * 1000;
+		const passwordsMatch = await checkPassword(user, password);
+		if (!passwordsMatch) return fail(400, { error: 'Email or password incorrect' });
 
-		const accessToken = await new jose.SignJWT({ id: user.id })
-			.setProtectedHeader({ alg })
-			.setIssuedAt()
-			.setIssuer(AppName)
-			.setAudience(AppName)
-			.setExpirationTime(Math.floor(lifeTimeMillis / 1000))
-			.sign(secret);
-
-		cookies.set(AccessTokenName, accessToken, {
+		const accessToken = await createAccessToken({ id: user.id });
+		cookies.set(CookiesAccessTokenName, accessToken, {
 			secure: !dev,
 			path: '/',
 			httpOnly: !dev,
 			expires: new Date(lifeTimeMillis)
 		});
 
-		const returnTo = url.searchParams.get('returnTo');
+		const returnTo = url.searchParams.get('next');
 		if (returnTo) redirect(303, decodeURIComponent(returnTo));
 
 		redirect(303, '/');
