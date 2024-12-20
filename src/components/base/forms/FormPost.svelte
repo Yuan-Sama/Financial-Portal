@@ -18,7 +18,7 @@
 			successResult: { type: 'success'; status: number; data?: Record<string, any> };
 			update(options?: { reset?: boolean; invalidateAll?: boolean }): Promise<void>;
 		}) => Promise<void>;
-		handleRedirect?: () => void;
+		handleRedirect?: () => void | Promise<void>;
 	} & SvelteHTMLElements['form'] = $props();
 
 	class FormState {
@@ -52,18 +52,17 @@
 				return await applyAction(result);
 			}
 
-			if (result.type === 'redirect') {
-				handleRedirect?.();
-				return await applyAction(result);
+			if (result.type === 'success') {
+				return await onsuccess?.({
+					formData,
+					formElement,
+					action,
+					successResult: { ...result },
+					update
+				});
 			}
-
-			return await onsuccess?.({
-				formData,
-				formElement,
-				action,
-				successResult: { ...result },
-				update
-			});
+			await handleRedirect?.();
+			return await applyAction(result);
 		};
 	}}
 >

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { applyAction } from '$app/forms';
 	import { Button, Icon } from '$components/base';
+	import { toastr } from '$components/base/toasts';
 	import type { RequestSearchParams } from '$lib/request.svelte';
 
 	let {
@@ -36,10 +37,26 @@
 		}
 
 		if (response.status === 401) {
+			const data = await response.json();
+
+			if (data.message) {
+				toastr.error(data.message);
+			}
+
 			return await applyAction({
 				type: 'redirect',
-				status: 401,
-				location: '/sign-in'
+				status: 303,
+				location: data.location ?? '/'
+			});
+		}
+
+		if (response.status === 303) {
+			const data = await response.json();
+
+			return await applyAction({
+				type: 'redirect',
+				status: 303,
+				location: data.location
 			});
 		}
 	}

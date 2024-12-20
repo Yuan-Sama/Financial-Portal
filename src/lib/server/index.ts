@@ -2,9 +2,6 @@ import { z } from 'zod';
 
 export const CookiesAccessTokenName = 'access';
 
-const DEFAULT_PAGE = 1;
-const DEFAULT_PAGE_SIZE = 5;
-
 export class Paginator {
 	#currentPage: number = 1;
 	#prevPage: number | null = null;
@@ -55,6 +52,9 @@ export class Paginator {
 	}
 }
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_PAGE_SIZE = 5;
+
 export const searchParamsValidator = z.object({
 	p: z.coerce
 		.number()
@@ -75,3 +75,36 @@ export const searchParamsValidator = z.object({
 	s: z.coerce.string().trim().default(''),
 	o: z.string().toLowerCase().default('')
 });
+
+function _delay(minSeconds: number, maxSeconds: number) {
+	let min = Math.ceil(minSeconds * 1000);
+	let max = Math.floor(maxSeconds * 1000);
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+export async function delay(minSeconds: number, maxSeconds: number): Promise<void> {
+	return new Promise((fullfill) => setTimeout(fullfill, _delay(minSeconds, maxSeconds)));
+}
+
+function isUrl(urlString: string) {
+	try {
+		new URL(urlString);
+		return true;
+	} catch (error) {
+		return false;
+	}
+}
+
+const redirectName = 'next';
+
+export function redirectToSignInWith(url: URL, pathname: string) {
+	const path = url.origin + pathname;
+	if (!isUrl(path)) return '/sign-in';
+	return `/sign-in?${redirectName}=${encodeURIComponent(path)}`;
+}
+
+export function decodeStringRedirectTo(url: URL) {
+	const urlString = url.searchParams.get(redirectName);
+	if (!urlString || !isUrl(urlString)) return undefined;
+	return decodeURIComponent(urlString);
+}

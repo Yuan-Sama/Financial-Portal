@@ -7,35 +7,47 @@ import {
 	createAccountValidator,
 	deleteAccountValidator,
 	editAccountValidator,
-	getPagingAccount
+	getPageAccount,
+	getSortOrder,
+	getTotalRecords
 } from '$lib/server/account';
 import { accounts } from '$lib/server/db.schema';
+import { delay, Paginator, redirectToSignInWith, searchParamsValidator } from '$lib/server';
 
-export const load = (async ({ parent, url }) => {
+const accountsPagePathname = '/accounts';
+
+export const load = (async ({ parent }) => {
 	const user = (await parent()).user;
 
-	const pagingAccount = await getPagingAccount(url, user);
+	const page = 1;
+	const pageSize = 5;
+	const totalRecords = await getTotalRecords(user.id);
+
+	const sortOrders = getSortOrder();
+	const data = await getPageAccount(user.id, sortOrders, page, pageSize);
+
+	const paginator = new Paginator(page, pageSize, totalRecords);
 
 	return {
-		pagination: pagingAccount.pagination,
-		data: pagingAccount.data
+		pagination: paginator.toObject(),
+		data
 	};
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
 	edit: async ({ url, request, locals }) => {
 		const user = await locals.Passport.getUser();
-		if (!user) redirect(303, `/sign-in?next=${encodeURI(url.href)}`);
+		if (!user) redirect(303, redirectToSignInWith(url, accountsPagePathname));
 
 		const formData = await request.formData();
 
 		const result = editAccountValidator.safeParse(Object.fromEntries(formData));
 
-		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+		if (dev) {
+			await delay(1, 2);
+		}
 
 		if (result.error) {
-			console.log(result.error);
-
 			return fail(400, {
 				error: result.error.errors[0].message
 			});
@@ -50,27 +62,42 @@ export const actions: Actions = {
 			})
 			.where(and(eq(accounts.userId, user.id), eq(accounts.id, result.data.id!)));
 
-		const pagingAccount = await getPagingAccount(url, user);
+		const validatedSearchParams = searchParamsValidator.safeParse(
+			Object.fromEntries(url.searchParams)
+		);
+
+		console.log(validatedSearchParams);
+
+		if (validatedSearchParams.error) redirect(303, url.origin + accountsPagePathname);
+
+		const { p: page, pz: pageSize, s: search, o: order } = validatedSearchParams.data;
+
+		const totalRecords = await getTotalRecords(user.id);
+
+		const sortOrders = getSortOrder(order);
+		const data = await getPageAccount(user.id, sortOrders, page, pageSize, search);
+
+		const paginator = new Paginator(page, pageSize, totalRecords);
 
 		return {
-			pagination: pagingAccount.pagination,
-			data: pagingAccount.data
+			pagination: paginator.toObject(),
+			data
 		};
 	},
 
 	create: async ({ url, request, locals }) => {
 		const user = await locals.Passport.getUser();
-		if (!user) redirect(303, `/sign-in?next=${encodeURI(url.href)}`);
+		if (!user) redirect(303, redirectToSignInWith(url, accountsPagePathname));
 
 		const formData = await request.formData();
 
 		const result = createAccountValidator.safeParse(Object.fromEntries(formData));
 
-		if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+		if (dev) {
+			await delay(1, 2);
+		}
 
 		if (result.error) {
-			console.log(result.error);
-
 			return fail(400, {
 				error: result.error.errors[0].message
 			});
@@ -83,28 +110,41 @@ export const actions: Actions = {
 			name: name
 		});
 
-		const pagingAccount = await getPagingAccount(url, user);
+		const validatedSearchParams = searchParamsValidator.safeParse(
+			Object.fromEntries(url.searchParams)
+		);
+
+		if (validatedSearchParams.error) redirect(303, url.origin + accountsPagePathname);
+
+		const { p: page, pz: pageSize, s: search, o: order } = validatedSearchParams.data;
+
+		const totalRecords = await getTotalRecords(user.id);
+
+		const sortOrders = getSortOrder(order);
+		const data = await getPageAccount(user.id, sortOrders, page, pageSize, search);
+
+		const paginator = new Paginator(page, pageSize, totalRecords);
 
 		return {
-			pagination: pagingAccount.pagination,
-			data: pagingAccount.data
+			pagination: paginator.toObject(),
+			data
 		};
 	},
 
 	delete: async ({ url, request, locals }) => {
 		const user = await locals.Passport.getUser();
-		if (!user) redirect(303, `/sign-in?next=${encodeURI(url.href)}`);
+		if (!user) redirect(303, redirectToSignInWith(url, accountsPagePathname));
 
 		const formData = await request.formData();
 		const obj = Object.fromEntries(formData) as { ids: string };
 
 		const result = deleteAccountValidator.safeParse(JSON.parse(obj.ids).map(Number));
 
-		// if (dev) await new Promise((fullfill) => setTimeout(fullfill, 2000));
+		if (dev) {
+			await delay(1, 2);
+		}
 
 		if (result.error) {
-			console.log(result.error);
-
 			return fail(400, {
 				error: result.error.errors[0].message
 			});
@@ -114,11 +154,24 @@ export const actions: Actions = {
 			.delete(accounts)
 			.where(and(eq(accounts.userId, user.id), inArray(accounts.id, result.data)));
 
-		const pagingAccount = await getPagingAccount(url, user);
+		const validatedSearchParams = searchParamsValidator.safeParse(
+			Object.fromEntries(url.searchParams)
+		);
+
+		if (validatedSearchParams.error) redirect(303, url.origin + accountsPagePathname);
+
+		const { p: page, pz: pageSize, s: search, o: order } = validatedSearchParams.data!;
+
+		const totalRecords = await getTotalRecords(user.id);
+
+		const sortOrders = getSortOrder(order);
+		const data = await getPageAccount(user.id, sortOrders, page, pageSize, search);
+
+		const paginator = new Paginator(page, pageSize, totalRecords);
 
 		return {
-			pagination: pagingAccount.pagination,
-			data: pagingAccount.data
+			pagination: paginator.toObject(),
+			data
 		};
 	}
 };

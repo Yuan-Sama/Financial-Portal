@@ -1,32 +1,27 @@
 import { and, asc, count, desc, eq, like, SQL } from 'drizzle-orm';
-import { Paginator, searchParamsValidator } from '.';
 import { db } from './db';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
-import { accounts, type User } from './db.schema';
+import { accounts } from './db.schema';
 import { z } from 'zod';
 
-export async function getPagingAccount(url: URL, user: User) {
-	const validatedSearchParams = searchParamsValidator.safeParse(
-		Object.fromEntries(url.searchParams)
-	);
-
-	const { p: page, pz: pageSize, s: search, o: order } = validatedSearchParams.data!;
-
+export async function getTotalRecords(userId: number, search?: string | null) {
 	const countResult = await db
 		.select({ count: count(accounts.id) })
 		.from(accounts)
 		.where(
 			and(
-				eq(accounts.userId, user.id),
+				eq(accounts.userId, userId),
 				search && search.length ? like(accounts.name, `%${search}%`) : undefined
 			)
 		);
 
-	const totalRecords = countResult[0].count;
+	return countResult[0].count;
+}
 
-	const orders = [] as (SQLiteColumn | SQL)[];
+export function getSortOrder(field?: string) {
+	const orders: (SQLiteColumn | SQL)[] = [];
 
-	switch (order) {
+	switch (field) {
 		case '-name':
 			orders.push(desc(accounts.name));
 			break;
@@ -35,8 +30,17 @@ export async function getPagingAccount(url: URL, user: User) {
 		default:
 			break;
 	}
+	return orders;
+}
 
-	const data = await db
+export function getPageAccount(
+	userId: number,
+	sortOrders: (SQLiteColumn | SQL)[],
+	page: number,
+	pageSize: number,
+	search?: string | null
+) {
+	return db
 		.select({
 			id: accounts.id,
 			name: accounts.name
@@ -44,20 +48,13 @@ export async function getPagingAccount(url: URL, user: User) {
 		.from(accounts)
 		.where(
 			and(
-				eq(accounts.userId, user.id),
+				eq(accounts.userId, userId),
 				search && search.length ? like(accounts.name, `%${search}%`) : undefined
 			)
 		)
-		.orderBy(...orders)
+		.orderBy(...sortOrders)
 		.offset(page * pageSize - pageSize)
 		.limit(pageSize);
-
-	const paginator = new Paginator(page, pageSize, totalRecords);
-
-	return {
-		pagination: paginator.toObject(),
-		data
-	};
 }
 
 export const editAccountValidator = z.object({

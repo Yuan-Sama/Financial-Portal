@@ -10,6 +10,6 @@ export const actions: Actions = {
 				path: '/'
 			});
 
-		redirect(303, '/');
+		redirect(303, '/welcome');
 	}
 };
