@@ -1,8 +1,8 @@
-<script>
-	/**
-	 * @type {{ error?: string, success?: string }}
-	 */
-	let { error = $bindable(undefined), success = $bindable(undefined) } = $props();
+<script lang="ts">
+	let {
+		error = $bindable(undefined),
+		success = $bindable(undefined)
+	}: { error?: string; success?: string } = $props();
 </script>
 
 {#if error}

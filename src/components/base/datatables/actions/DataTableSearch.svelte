@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { applyAction } from '$app/forms';
 	import { Icon, Spinner } from '$components/base';
-	import { Input, Label } from '$components/forms';
+	import { Input, Label } from '$components/base/forms';
 	import type { RequestSearchParams } from '$lib/request.svelte';
 
 	let searching = $state(false);

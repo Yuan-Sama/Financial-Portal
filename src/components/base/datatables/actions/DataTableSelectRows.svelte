@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Input, Label } from '$components/forms';
+	import { Input, Label } from '$components/base/forms';
 	import type { ChangeEventHandler } from 'svelte/elements';
 
 	let {

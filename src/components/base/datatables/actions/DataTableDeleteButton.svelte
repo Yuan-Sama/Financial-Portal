@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { Button, Icon } from '$components/base';
-	import { toastr } from '$components/toasts';
+	import { toastr } from '$components/base/toasts';
 	import type { RequestSearchParams } from '$lib/request.svelte';
 	import type { Snippet } from 'svelte';
 

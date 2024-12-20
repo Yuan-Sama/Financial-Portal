@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { Form, Input, Label, SubmitButton, ValidationText } from '$components/forms';
-	import { toastr } from '$components/toasts';
+	import { FormPost, Input, Label, SubmitButton, ValidationText } from '$components/base/forms';
+	import { toastr } from '$components/base/toasts';
 	import { AppName } from '$lib';
 	import type { ActionData } from './$types';
 
@@ -25,7 +25,7 @@
 	Welcome! Please fill in the details to get started
 </p>
 
-<Form
+<FormPost
 	class="space-y-4 md:space-y-6"
 	handleRedirect={() => {
 		toastr.success('Welcome');
@@ -88,4 +88,4 @@
 			>
 		</p>
 	{/snippet}
-</Form>
+</FormPost>

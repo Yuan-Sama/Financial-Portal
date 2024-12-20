@@ -5,20 +5,24 @@
 		SideBarCloseButton,
 		SideBarHeading,
 		SideBarSubHeading
-	} from '$components/sidebars';
-	import { Form, Input, Label, SubmitButton } from '$components/forms';
-	import { toastr } from '$components/toasts';
+	} from '$components/base/sidebars';
+	import { FormPost, Input, Label, SubmitButton } from '$components/base/forms';
+	import { toastr } from '$components/base/toasts';
 	import { Button, Icon } from '$components/base';
-	import { DataTable, DataTableBottom, DataTableTop } from '$components/datatables/blocks';
-	import { DataTableWrapper } from '$components/datatables';
+	import { DataTable, DataTableBottom, DataTableTop } from '$components/base/datatables/blocks';
+	import { DataTableWrapper } from '$components/base/datatables';
 	import {
 		DataTableDeleteButton,
 		DataTablePageSizeSelector,
 		DataTablePagination,
 		DataTableSearch,
 		DataTableSelectRows
-	} from '$components/datatables/actions';
-	import { DataTableBody, DataTableHead, DataTableHeading } from '$components/datatables/tables';
+	} from '$components/base/datatables/actions';
+	import {
+		DataTableBody,
+		DataTableHead,
+		DataTableHeading
+	} from '$components/base/datatables/tables';
 	import { RequestSearchParams } from '$lib/request.svelte';
 	import { AppName } from '$lib';
 
@@ -213,7 +217,7 @@
 			<SideBarSubHeading>Edit the existed account.</SideBarSubHeading>
 		{/if}
 
-		<Form
+		<FormPost
 			action={(editAccount ? '?/edit' : '?/create') + `&${accountSearchParams.toString()}`}
 			onsuccess={async ({ successResult, update }) => {
 				showSideBar = false;
@@ -252,6 +256,6 @@
 					{editAccount ? 'Save changes' : 'Create account'}
 				</SubmitButton>
 			{/snippet}
-		</Form>
+		</FormPost>
 	</div>
 </SideBar>
