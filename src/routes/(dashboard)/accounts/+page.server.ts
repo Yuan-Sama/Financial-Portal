@@ -6,7 +6,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import {
 	createAccountValidator,
 	deleteAccountValidator,
-	editAccountValidator,
+	updateAccountValidator,
 	getPageAccount,
 	getSortOrder,
 	getTotalRecords
@@ -41,7 +41,7 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 
-		const result = editAccountValidator.safeParse(Object.fromEntries(formData));
+		const result = updateAccountValidator.safeParse(Object.fromEntries(formData));
 
 		if (dev) {
 			await delay(1, 2);

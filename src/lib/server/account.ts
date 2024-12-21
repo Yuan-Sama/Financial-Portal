@@ -3,6 +3,7 @@ import { db } from './db';
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core';
 import { accounts } from './db.schema';
 import { z } from 'zod';
+import { createInsertSchema } from 'drizzle-zod';
 
 export async function getTotalRecords(userId: number, search?: string | null) {
 	const countResult = await db
@@ -57,14 +58,14 @@ export function getPageAccount(
 		.limit(pageSize);
 }
 
-export const editAccountValidator = z.object({
+export const updateAccountValidator = createInsertSchema(accounts, {
 	id: z.coerce
 		.number({ required_error: 'id is required' })
 		.min(1, { message: 'id must be greater than 0' }),
 	name: z.string({ required_error: 'name is required' }).min(1, { message: 'name cannot be empty' })
 });
 
-export const createAccountValidator = z.object({
+export const createAccountValidator = createInsertSchema(accounts, {
 	name: z
 		.string({ required_error: 'Name is required' })
 		.trim()

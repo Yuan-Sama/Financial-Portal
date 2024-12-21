@@ -7,7 +7,7 @@ import { delay, Paginator, redirectToSignInWith, searchParamsValidator } from '$
 import {
 	createCategoryValidator,
 	deleteCategoryValidator,
-	editCategoryValidator,
+	updateCategoryValidator,
 	getPageCategory,
 	getSortOrder,
 	getTotalRecords
@@ -41,7 +41,7 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 
-		const result = editCategoryValidator.safeParse(Object.fromEntries(formData));
+		const result = updateCategoryValidator.safeParse(Object.fromEntries(formData));
 
 		if (dev) {
 			await delay(1, 2);
