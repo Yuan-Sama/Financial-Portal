@@ -2,7 +2,7 @@ import { AppName } from '$lib';
 import type { User } from './db.schema';
 import * as jose from 'jose';
 
-const seconds = 10; // 1 hour
+const seconds = 60 * 60 * 2; // 2 hours
 const millis = seconds * 1000;
 // TODO: get from .env
 const secret = new TextEncoder().encode(

@@ -209,12 +209,12 @@
 	<SideBarCloseButton onclick={() => (showSideBar = false)} left />
 
 	<div class="overflow-y-auto px-3 py-7">
-		<SideBarHeading textCenter>{AppName}</SideBarHeading>
-
 		{#if !editCategory}
-			<SideBarSubHeading>Create a new category to track your transactions.</SideBarSubHeading>
+			<SideBarHeading textCenter>New Category</SideBarHeading>
+			<SideBarSubHeading>Create a new category to organize your transactions.</SideBarSubHeading>
 		{:else}
-			<SideBarSubHeading>Edit the existed category.</SideBarSubHeading>
+			<SideBarHeading textCenter>Edit Category</SideBarHeading>
+			<SideBarSubHeading>Edit an existing category.</SideBarSubHeading>
 		{/if}
 
 		<FormPost
@@ -245,7 +245,7 @@
 				<Label for="name">Name</Label>
 				<Input
 					class="mt-3 w-full"
-					placeholder="e.g. Cash, Bank, Credit Card"
+					placeholder="e.g. Food, Travel, etc."
 					value={editCategory?.name}
 					id="name"
 					name="name"

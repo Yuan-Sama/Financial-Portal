@@ -209,12 +209,12 @@
 	<SideBarCloseButton onclick={() => (showSideBar = false)} left />
 
 	<div class="overflow-y-auto px-3 py-7">
-		<SideBarHeading textCenter>{AppName}</SideBarHeading>
-
 		{#if !editAccount}
+			<SideBarHeading textCenter>New Account</SideBarHeading>
 			<SideBarSubHeading>Create a new account to track your transactions.</SideBarSubHeading>
 		{:else}
-			<SideBarSubHeading>Edit the existed account.</SideBarSubHeading>
+			<SideBarHeading textCenter>Edit Account</SideBarHeading>
+			<SideBarSubHeading>Edit an existing account.</SideBarSubHeading>
 		{/if}
 
 		<FormPost
@@ -245,7 +245,7 @@
 				<Label for="name">Name</Label>
 				<Input
 					class="mt-3 w-full"
-					placeholder="e.g. Cash, Bank, Credit Card"
+					placeholder="e.g. Cash, Bank, Credit Card, etc."
 					value={editAccount?.name}
 					id="name"
 					name="name"
