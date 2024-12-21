@@ -58,7 +58,7 @@
 			class="flex flex-col gap-y-2 space-y-1.5 p-6 lg:flex-row lg:items-center lg:justify-between"
 		>
 			<span class="line-clamp-1 text-xl font-semibold text-gray-900 dark:text-white">
-				Accounts
+				Your Accounts
 			</span>
 
 			<Button
