@@ -1,4 +1,6 @@
 <script lang="ts">
+	type Account = { id: number; name: string };
+
 	import type { PageData } from './$types';
 	import {
 		SideBar,
@@ -6,46 +8,41 @@
 		SideBarHeading,
 		SideBarSubHeading
 	} from '$components/base/sidebars';
-	import { FormPost, Input, Label, SubmitButton } from '$components/base/forms';
+	import { FormPost, SubmitButton } from '$components/base/forms';
 	import { toastr } from '$components/base/toasts';
 	import { Button, Icon } from '$components/base';
-	import { DataTable, DataTableBottom, DataTableTop } from '$components/base/datatables/blocks';
-	import { DataTableWrapper } from '$components/base/datatables';
-	import {
-		DataTableDeleteButton,
-		DataTablePageSizeSelector,
-		DataTablePagination,
-		DataTableSearch,
-		DataTableSelectRows
-	} from '$components/base/datatables/actions';
-	import {
-		DataTableBody,
-		DataTableHead,
-		DataTableHeading
-	} from '$components/base/datatables/tables';
+	import { DataTableHeading } from '$components/base/datatables/tables';
 	import { RequestSearchParams } from '$lib/request.svelte';
 	import { AppName } from '$lib';
+	import DeleteButton from '$components/DeleteButton.svelte';
+	import { Table, TableBottom, TableTop } from '$components/accounts';
+	import { Input, Label } from '$components/forms';
 
 	let { data }: { data: PageData } = $props();
 
-	type Account = { id: number; name: string };
-
-	const headings = [{ name: 'Select All' }, { name: 'Name' }, { name: 'Action' }];
-	const pageSizeOptions = [5, 10, 15, 20, 25];
-
-	let pageData = $state({
-		accounts: data.data,
-		pagination: data.pagination
-	});
-
-	let showSideBar = $state(false);
-	let editAccount: Account | undefined = $state();
-
+	const headings = [{ name: 'Name' }];
 	const accountSearchParams = new RequestSearchParams();
 
-	$effect(() => {
-		if (!showSideBar && editAccount) editAccount = undefined;
-	});
+	let accounts = $state(data.data);
+	let pagination = $state(data.pagination);
+	let editAccount: Account | undefined = $state();
+	let showSideBar = $state(false);
+	let selectedRows: { [idx: number]: Account } = $state({});
+
+	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
+
+	function updateData(newData: { data: typeof accounts; pagination: typeof pagination }) {
+		accounts = newData.data;
+		pagination = newData.pagination;
+	}
+
+	function beforeSubmitForm() {
+		const deletedCount = selectedRowsSize;
+		const newTotalRecords = pagination.totalRecords - deletedCount;
+		const newTotalPages = Math.ceil(newTotalRecords / accountSearchParams.pageSize);
+
+		if (accountSearchParams.page > newTotalPages) accountSearchParams.page = newTotalPages;
+	}
 </script>
 
 <svelte:head>
@@ -69,144 +66,85 @@
 		</div>
 
 		<div class="px-6 pb-6">
-			<DataTableWrapper
-				{headings}
-				data={pageData.accounts}
+			<TableTop
 				requestSearchParams={accountSearchParams}
-				onsuccess={(newData: {
-					data: typeof pageData.accounts;
-					pagination: typeof pageData.pagination;
-				}) => {
-					pageData.accounts = newData.data;
-					pageData.pagination = newData.pagination;
+				searchUrl="/api/accounts"
+				searchPlaceholder="Search for accounts"
+				updateDataAfterSearching={updateData}
+				deleteButtonBeforeSubmitForm={beforeSubmitForm}
+				deleteValue={Object.values(selectedRows).map((a) => a.id)}
+				updateDataAfterDeleting={(newData) => {
+					updateData(newData);
+					selectedRows = {};
+					toastr.success('Accounts deleted');
 				}}
-			>
-				{#snippet content(headings, data, requestSearchParams, rowsSelector, onsuccess)}
-					<DataTableTop>
-						<div class="bg-white dark:bg-gray-900">
-							<DataTableSearch
-								url="/api/accounts"
-								placeholder="Search for accounts"
-								{requestSearchParams}
-								{onsuccess}
-							/>
-						</div>
+				{selectedRowsSize}
+			/>
 
-						{#if rowsSelector.size > 0}
-							<DataTableDeleteButton
-								url="?/delete"
-								totalRecords={pageData.pagination.totalRecords}
-								requestSearchParams={accountSearchParams}
-								deleteIds={Object.keys(rowsSelector.rows)}
-								onsuccess={async (newData) => {
-									await onsuccess?.(newData);
-									rowsSelector.rows = {};
-									toastr.success('Accounts deleted');
-								}}
-							>
-								Delete ({rowsSelector.size})
-							</DataTableDeleteButton>
-						{/if}
-					</DataTableTop>
-					<DataTable>
-						<DataTableHead {headings}>
-							{#snippet th(heading)}
-								{#if heading.name === 'Select All'}
-									<th scope="col" class="w-[1%] p-4">
-										<DataTableSelectRows
-											id="select-all"
-											checked={data.length > 0 && rowsSelector.size == data.length}
-											screenReader={heading.name}
-											onchange={(e) => {
-												rowsSelector.rows = !e.currentTarget.checked
-													? {}
-													: data.reduce((obj, a) => Object.assign(obj, { [a.id]: a }), {});
-											}}
-										/>
-									</th>
-								{:else if heading.name === 'Action'}
-									<th scope="col">{heading.name}</th>
-								{:else}
-									<DataTableHeading
-										api="/api/accounts"
-										{heading}
-										{requestSearchParams}
-										{onsuccess}
-									/>
-								{/if}
-							{/snippet}
-						</DataTableHead>
-						<DataTableBody {data} colsCount={headings.length}>
-							{#snippet td(account)}
-								<td class="w-4 p-4">
-									<DataTableSelectRows
-										id="select-{account.id}"
-										checked={Boolean(rowsSelector.rows[account.id])}
-										screenReader="Select account {account.id}"
-										onchange={(e) => {
-											if (e.currentTarget.checked) {
-												rowsSelector.rows[account.id] = account;
-											} else if (!e.currentTarget.checked && rowsSelector.rows[account.id]) {
-												delete rowsSelector.rows[account.id];
-											}
-										}}
-									/>
-								</td>
-								<td class="px-5 py-3">{account.name}</td>
-								<td class="flex items-center justify-center gap-x-3 px-5 py-3 text-right">
-									<button
-										onclick={() => {
-											editAccount = account;
-											showSideBar = true;
-										}}
-										title="Edit"
-									>
-										<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
-									</button>
-									<DataTableDeleteButton
-										type="icon"
-										url="?/delete"
-										totalRecords={pageData.pagination.totalRecords}
-										{requestSearchParams}
-										deleteIds={[account.id]}
-										onsuccess={async (newData) => {
-											await onsuccess?.(newData);
-											toastr.success('Account deleted');
-										}}
-									/>
-								</td>
-							{/snippet}
-						</DataTableBody>
-					</DataTable>
-					<DataTableBottom>
-						<span
-							class="my-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:inline md:w-auto lg:mb-4"
-							>{rowsSelector.size} of {data.length} row(s) selected.</span
-						>
-						<div class="my-4 inline-flex items-center justify-center">
-							<DataTablePageSizeSelector
-								{pageSizeOptions}
-								url="/api/accounts"
-								{requestSearchParams}
-								{onsuccess}
-							/>
-							<DataTablePagination
-								url="/api/accounts"
-								{...pageData.pagination}
-								{requestSearchParams}
-								{onsuccess}
-								dataLength={data.length}
-							/>
-						</div>
-					</DataTableBottom>
+			<Table collection={accounts} {headings} bind:selectedRows>
+				{#snippet head(heading)}
+					<DataTableHeading
+						api="/api/accounts"
+						{heading}
+						requestSearchParams={accountSearchParams}
+						onsuccess={updateData}
+					/>
 				{/snippet}
-			</DataTableWrapper>
+				{#snippet row(account, _)}
+					<td class="px-5 py-3">{account.name}</td>
+				{/snippet}
+				{#snippet rowActions(account, _)}
+					<button
+						onclick={() => {
+							editAccount = account;
+							showSideBar = true;
+						}}
+						title="Edit"
+					>
+						<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
+					</button>
+					<DeleteButton
+						iconOnly
+						{beforeSubmitForm}
+						searchParams={accountSearchParams}
+						value={[account.id]}
+						success={(newData) => {
+							updateData(newData);
+							selectedRows = {};
+							toastr.success('Account deleted');
+						}}
+					/>
+				{/snippet}
+			</Table>
+
+			<TableBottom
+				{selectedRowsSize}
+				searchParams={accountSearchParams}
+				collection={accounts}
+				pageSizeSelectorUrl="/api/accounts"
+				pageSizeSelectorAfterSuccess={(newData) => {
+					updateData(newData);
+					selectedRows = {};
+				}}
+				bind:pagination
+				paginationUrl="/api/accounts"
+				paginationAfterSuccess={(newData) => {
+					updateData(newData);
+					selectedRows = {};
+				}}
+			/>
 		</div>
 	</div>
 </div>
 
-<SideBar bind:show={showSideBar} outsideclose direction="right" class="w-full lg:max-w-md">
-	<SideBarCloseButton onclick={() => (showSideBar = false)} left />
+<SideBar show={showSideBar} outsideclose direction="right" class="w-full lg:max-w-md">
+	<SideBarCloseButton
+		left
+		onclick={() => {
+			showSideBar = false;
+			editAccount = undefined;
+		}}
+	/>
 
 	<div class="overflow-y-auto px-3 py-7">
 		{#if !editAccount}
@@ -231,8 +169,8 @@
 					toastr.success('Account created');
 				}
 
-				pageData.accounts = data.data;
-				pageData.pagination = data.pagination;
+				accounts = data.data;
+				pagination = data.pagination;
 
 				await update();
 			}}

@@ -5,17 +5,17 @@
 	import type { RequestSearchParams } from '$lib/request.svelte';
 
 	let {
-		pageSizeOptions,
-		url,
-		requestSearchParams,
+        url,
+		searchParams,
+		pageSizes = [5, 10, 15, 20, 25],
 		label = 'Show entries',
-		onsuccess = undefined
+		success = undefined
 	}: {
-		pageSizeOptions: number[];
-		url: string;
-		requestSearchParams: RequestSearchParams;
+        url: string;
+		searchParams: RequestSearchParams;
+		pageSizes?: number[];
 		label?: string;
-		onsuccess?: (newData: any) => Promise<void> | void;
+		success?: (newData: any) => Promise<void> | void;
 	} = $props();
 </script>
 
@@ -29,13 +29,13 @@
 		class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
 		name="pz"
 		onchange={async (event) => {
-			requestSearchParams.page = 1;
-			requestSearchParams.pageSize = +event.currentTarget.value;
+			searchParams.page = 1;
+			searchParams.pageSize = +event.currentTarget.value;
 
-			const response = await fetch(`${url}?${requestSearchParams.toString()}`);
+			const response = await fetch(`${url}?${searchParams.toString()}`);
 
 			if (response.ok) {
-				return await onsuccess?.(await response.json());
+				return await success?.(await response.json());
 			}
 
 			if (response.status === 401) {
@@ -63,8 +63,8 @@
 			}
 		}}
 	>
-		{#each pageSizeOptions as option}
-			<option selected={option === requestSearchParams.pageSize} value={option}>{option}</option>
+		{#each pageSizes as option}
+			<option selected={option === searchParams.pageSize} value={option}>{option}</option>
 		{/each}
 	</select>
 </div>

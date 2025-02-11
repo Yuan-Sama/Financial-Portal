@@ -6,7 +6,7 @@
 		SideBarHeading,
 		SideBarSubHeading
 	} from '$components/base/sidebars';
-	import { FormPost, Input, Label, SubmitButton } from '$components/base/forms';
+	import { FormPost, SubmitButton } from '$components/base/forms';
 	import { toastr } from '$components/base/toasts';
 	import { Button, Icon } from '$components/base';
 	import { DataTable, DataTableBottom, DataTableTop } from '$components/base/datatables/blocks';
@@ -25,6 +25,7 @@
 	} from '$components/base/datatables/tables';
 	import { RequestSearchParams } from '$lib/request.svelte';
 	import { AppName } from '$lib';
+	import { Input, Label } from '$components/forms';
 
 	let { data }: { data: PageData } = $props();
 

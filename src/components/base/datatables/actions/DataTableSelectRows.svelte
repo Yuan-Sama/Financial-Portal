@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Input, Label } from '$components/base/forms';
+	import { Input, Label } from '$components/forms';
 	import type { ChangeEventHandler } from 'svelte/elements';
 
 	let {
@@ -15,14 +15,12 @@
 	} = $props();
 </script>
 
-<div class="flex items-center">
-	<Input
-		{id}
-		type="checkbox"
-		{checked}
-		{onchange}
-		class="size-4 cursor-pointer"
-		aria-label={screenReader}
-	/>
-	<Label for={id} class="sr-only">{screenReader}</Label>
-</div>
+<Input
+	{id}
+	type="checkbox"
+	{checked}
+	{onchange}
+	class="size-4 cursor-pointer"
+	aria-label={screenReader}
+/>
+<Label for={id} class="sr-only">{screenReader}</Label>

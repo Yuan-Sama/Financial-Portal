@@ -2,21 +2,21 @@
 	import { applyAction } from '$app/forms';
 	import { Icon, Spinner } from '$components/base';
 	import { toastr } from '$components/base/toasts';
-	import { Input, Label } from '$components/forms';
 	import type { RequestSearchParams } from '$lib/request.svelte';
+	import { Input, Label } from './forms';
 
 	let searching = $state(false);
 
 	let {
 		url,
-		requestSearchParams,
+		searchParams,
 		placeholder = undefined,
-		onsuccess = undefined
+		success = undefined
 	}: {
 		url: string;
-		requestSearchParams: RequestSearchParams;
+		searchParams: RequestSearchParams;
 		placeholder?: string;
-		onsuccess?: (newData: any) => Promise<void> | void;
+		success?: (data: any) => Promise<void> | void;
 	} = $props();
 </script>
 
@@ -39,16 +39,16 @@
 			disabled={searching}
 			onkeypress={async (event) => {
 				if (event.key === 'Enter') {
-					requestSearchParams.page = 1;
-					requestSearchParams.search = event.currentTarget.value;
+					searchParams.page = 1;
+					searchParams.search = event.currentTarget.value;
 					searching = true;
 
-					const response = await fetch(`${url}?${requestSearchParams.toString()}`);
+					const response = await fetch(`${url}?${searchParams.toString()}`);
 
 					searching = false;
 
 					if (response.ok) {
-						if (onsuccess) return await onsuccess(await response.json());
+						return await success?.(await response.json());
 					}
 
 					if (response.status === 401) {

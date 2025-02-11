@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { FormPost, Input, Label, SubmitButton, ValidationText } from '$components/base/forms';
+	import { FormPost, SubmitButton, ValidationText } from '$components/base/forms';
 	import { toastr } from '$components/base/toasts';
+	import { Input, Label } from '$components/forms';
 	import { AppName } from '$lib';
 	import type { ActionData } from './$types';
 

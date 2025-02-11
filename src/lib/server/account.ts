@@ -63,13 +63,13 @@ export const updateAccountValidator = createInsertSchema(accounts, {
 		.number({ required_error: 'id is required' })
 		.min(1, { message: 'id must be greater than 0' }),
 	name: z.string({ required_error: 'name is required' }).min(1, { message: 'name cannot be empty' })
-});
+}).pick({ name: true, id: true });
 
 export const createAccountValidator = createInsertSchema(accounts, {
 	name: z
 		.string({ required_error: 'Name is required' })
 		.trim()
 		.min(1, { message: 'Name can not be empty' })
-});
+}).pick({ name: true });
 
 export const deleteAccountValidator = z.number().array();
