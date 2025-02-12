@@ -36,10 +36,11 @@
 	use:enhance={({ formData, action }) => {
 		beforeSubmitForm?.();
 
-		searchParams
-			?.toURLSearchParams()
-			.entries()
-			.map(([key, val]) => action.searchParams.set(key, val));
+		if (searchParams) {
+			for (const [key, val] of searchParams.toURLSearchParams().entries()) {
+				action.searchParams.set(key, val);
+			}
+		}
 
 		formData.set(name, JSON.stringify(value));
 

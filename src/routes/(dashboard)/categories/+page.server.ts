@@ -66,8 +66,6 @@ export const actions: Actions = {
 			Object.fromEntries(url.searchParams)
 		);
 
-		console.log(validatedSearchParams);
-
 		if (validatedSearchParams.error) redirect(303, url.origin + categoriesPagePathname);
 
 		const { p: page, pz: pageSize, s: search, o: order } = validatedSearchParams.data;

@@ -72,4 +72,7 @@ export const createAccountValidator = createInsertSchema(accounts, {
 		.min(1, { message: 'Name can not be empty' })
 }).pick({ name: true });
 
-export const deleteAccountValidator = z.number().array();
+export const deleteAccountValidator = z
+	.number()
+	.min(1, { message: 'id must be greater than 0' })
+	.array();

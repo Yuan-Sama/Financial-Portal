@@ -33,7 +33,7 @@
 >
 	{#snippet content(formState)}
 		<div>
-			<Label for="email">Your email</Label>
+			<Label for="email" class="mb-2">Your email</Label>
 			<Input
 				class="w-full"
 				type="email"
@@ -48,7 +48,7 @@
 		</div>
 
 		<div>
-			<Label for="password">Password</Label>
+			<Label for="password" class="mb-2">Password</Label>
 			<Input
 				class="w-full"
 				type="password"
@@ -64,7 +64,7 @@
 		</div>
 
 		<div>
-			<Label for="confirmPassword">Confirm password</Label>
+			<Label for="confirmPassword" class="mb-2">Confirm password</Label>
 			<Input
 				class="w-full"
 				type="password"

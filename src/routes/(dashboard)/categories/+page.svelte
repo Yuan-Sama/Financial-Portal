@@ -156,7 +156,7 @@
 			<input type="number" hidden name="id" value={editCategory.id} />
 		{/if}
 
-		<Label for="name">Name</Label>
+		<Label for="name" class="mb-2">Name</Label>
 		<Input
 			class="mt-3 w-full"
 			placeholder="e.g. Food, Travel, etc."
