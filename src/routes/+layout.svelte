@@ -3,7 +3,7 @@
 	import { fly } from 'svelte/transition';
 	import '../app.css';
 	import { cubicInOut } from 'svelte/easing';
-	import { Toast, Toastr } from '$components/base/toasts';
+	import { Toast, Toastr } from '$components/toasts';
 	import BackToTop from '$components/BackToTop.svelte';
 	let { children } = $props();
 </script>

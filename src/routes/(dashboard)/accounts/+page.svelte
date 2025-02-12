@@ -1,33 +1,28 @@
 <script lang="ts">
 	type Account = { id: number; name: string };
+	type SelectedRows = { [id: number]: Account };
 
 	import type { PageData } from './$types';
-	import {
-		SideBar,
-		SideBarCloseButton,
-		SideBarHeading,
-		SideBarSubHeading
-	} from '$components/base/sidebars';
-	import { FormPost, SubmitButton } from '$components/base/forms';
-	import { toastr } from '$components/base/toasts';
-	import { Button, Icon } from '$components/base';
-	import { DataTableHeading } from '$components/base/datatables/tables';
 	import { RequestSearchParams } from '$lib/request.svelte';
 	import { AppName } from '$lib';
 	import DeleteButton from '$components/DeleteButton.svelte';
-	import { Table, TableBottom, TableTop } from '$components/accounts';
+	import { SideBarForm, Table, TableBottom, TableTop } from '$components/accounts';
 	import { Input, Label } from '$components/forms';
+	import { Button, Icon } from '$components';
+	import { toastr } from '$components/toasts';
+	import { SortableColumn } from '$components/tables';
 
 	let { data }: { data: PageData } = $props();
 
+	const api = '/api/accounts';
 	const headings = [{ name: 'Name' }];
 	const accountSearchParams = new RequestSearchParams();
 
+	let showForm = $state(false);
 	let accounts = $state(data.data);
 	let pagination = $state(data.pagination);
-	let editAccount: Account | undefined = $state();
-	let showSideBar = $state(false);
-	let selectedRows: { [idx: number]: Account } = $state({});
+	let editAccount: Account | undefined | null = $state();
+	let selectedRows: SelectedRows = $state({});
 
 	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
 
@@ -61,14 +56,14 @@
 			<Button
 				class="flex items-center justify-center font-medium"
 				size="sm"
-				onclick={() => (showSideBar = true)}><Icon icon="plus" class="mr-2 size-4" />Add new</Button
+				onclick={() => (showForm = true)}><Icon icon="plus" class="mr-2 size-4" />Add new</Button
 			>
 		</div>
 
 		<div class="px-6 pb-6">
 			<TableTop
 				requestSearchParams={accountSearchParams}
-				searchUrl="/api/accounts"
+				searchUrl={api}
 				searchPlaceholder="Search for accounts"
 				updateDataAfterSearching={updateData}
 				deleteButtonBeforeSubmitForm={beforeSubmitForm}
@@ -83,11 +78,11 @@
 
 			<Table collection={accounts} {headings} bind:selectedRows>
 				{#snippet head(heading)}
-					<DataTableHeading
-						api="/api/accounts"
+					<SortableColumn
+						url={api}
 						{heading}
-						requestSearchParams={accountSearchParams}
-						onsuccess={updateData}
+						searchParams={accountSearchParams}
+						success={updateData}
 					/>
 				{/snippet}
 				{#snippet row(account, _)}
@@ -97,7 +92,7 @@
 					<button
 						onclick={() => {
 							editAccount = account;
-							showSideBar = true;
+							showForm = true;
 						}}
 						title="Edit"
 					>
@@ -121,13 +116,13 @@
 				{selectedRowsSize}
 				searchParams={accountSearchParams}
 				collection={accounts}
-				pageSizeSelectorUrl="/api/accounts"
+				pageSizeSelectorUrl={api}
 				pageSizeSelectorAfterSuccess={(newData) => {
 					updateData(newData);
 					selectedRows = {};
 				}}
 				bind:pagination
-				paginationUrl="/api/accounts"
+				paginationUrl={api}
 				paginationAfterSuccess={(newData) => {
 					updateData(newData);
 					selectedRows = {};
@@ -137,63 +132,38 @@
 	</div>
 </div>
 
-<SideBar show={showSideBar} outsideclose direction="right" class="w-full lg:max-w-md">
-	<SideBarCloseButton
-		left
-		onclick={() => {
-			showSideBar = false;
+<SideBarForm
+	bind:show={showForm}
+	bind:editData={editAccount}
+	searchParams={accountSearchParams}
+	createHeading="New Account"
+	createSubHeading="Create a new account to track your transactions."
+	editHeading="Edit Account"
+	editSubHeading="Edit an existing account."
+	submitButtonCreateText="Create account"
+	updateData={(newData) => {
+		if (editAccount) {
+			toastr.success('Account updated');
 			editAccount = undefined;
-		}}
-	/>
-
-	<div class="overflow-y-auto px-3 py-7">
-		{#if !editAccount}
-			<SideBarHeading textCenter>New Account</SideBarHeading>
-			<SideBarSubHeading>Create a new account to track your transactions.</SideBarSubHeading>
-		{:else}
-			<SideBarHeading textCenter>Edit Account</SideBarHeading>
-			<SideBarSubHeading>Edit an existing account.</SideBarSubHeading>
+		} else {
+			toastr.success('Account created');
+		}
+		updateData(newData);
+	}}
+>
+	{#snippet formContent(formState)}
+		{#if editAccount}
+			<input type="number" hidden name="id" value={editAccount.id} />
 		{/if}
 
-		<FormPost
-			action={(editAccount ? '?/edit' : '?/create') + `&${accountSearchParams.toString()}`}
-			onsuccess={async ({ successResult, update }) => {
-				showSideBar = false;
-
-				const data = successResult.data!;
-
-				if (editAccount) {
-					toastr.success('Account updated');
-					editAccount = undefined;
-				} else {
-					toastr.success('Account created');
-				}
-
-				accounts = data.data;
-				pagination = data.pagination;
-
-				await update();
-			}}
-		>
-			{#snippet content(state)}
-				{#if editAccount}
-					<input type="number" hidden name="id" value={editAccount.id} />
-				{/if}
-
-				<Label for="name">Name</Label>
-				<Input
-					class="mt-3 w-full"
-					placeholder="e.g. Cash, Bank, Credit Card, etc."
-					value={editAccount?.name}
-					id="name"
-					name="name"
-					bind:disabled={state.submitting}
-				/>
-
-				<SubmitButton bind:disabled={state.submitting}>
-					{editAccount ? 'Save changes' : 'Create account'}
-				</SubmitButton>
-			{/snippet}
-		</FormPost>
-	</div>
-</SideBar>
+		<Label for="name">Name</Label>
+		<Input
+			class="mt-3 w-full"
+			placeholder="e.g. Cash, Bank, Credit Card, etc."
+			value={editAccount?.name}
+			id="name"
+			name="name"
+			bind:disabled={formState.submitting}
+		/>
+	{/snippet}
+</SideBarForm>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { applyAction } from '$app/forms';
-	import { toastr } from '$components/base/toasts';
+	import { toastr } from '$components/toasts';
 	import { Label } from '$components/forms';
 	import type { RequestSearchParams } from '$lib/request.svelte';
 

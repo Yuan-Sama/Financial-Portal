@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { FormPost, SubmitButton } from '$components/base/forms';
-	import { toastr } from '$components/base/toasts';
-	import { Input, Label } from '$components/forms';
+	import { toastr } from '$components/toasts';
+	import { Form, Input, Label, SubmitButton } from '$components/forms';
 	import { AppName } from '$lib';
 
 	const { searchParams } = $page.url;
@@ -21,7 +20,7 @@
 
 <p class="text-center text-base text-gray-400">Welcome back! Please sign in to continue</p>
 
-<FormPost
+<Form
 	class="space-y-4 md:space-y-6"
 	handleRedirect={() => {
 		toastr.success('Welcome back');
@@ -63,4 +62,4 @@
 			>
 		</p>
 	{/snippet}
-</FormPost>
+</Form>

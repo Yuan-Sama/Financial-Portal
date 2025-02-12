@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { Button, Spinner } from '$components';
 	import type { Snippet } from 'svelte';
-	import { Button, Spinner } from '..';
 
 	let {
 		disableLoader = $bindable(false),

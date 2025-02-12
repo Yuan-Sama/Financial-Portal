@@ -1,52 +1,43 @@
 <script lang="ts">
+	type Category = { id: number; name: string };
+	type SelectedRows = { [id: number]: Category };
+
 	import type { PageData } from './$types';
-	import {
-		SideBar,
-		SideBarCloseButton,
-		SideBarHeading,
-		SideBarSubHeading
-	} from '$components/base/sidebars';
-	import { FormPost, SubmitButton } from '$components/base/forms';
-	import { toastr } from '$components/base/toasts';
-	import { Button, Icon } from '$components/base';
-	import { DataTable, DataTableBottom, DataTableTop } from '$components/base/datatables/blocks';
-	import { DataTableWrapper } from '$components/base/datatables';
-	import {
-		DataTableDeleteButton,
-		DataTablePageSizeSelector,
-		DataTablePagination,
-		DataTableSearch,
-		DataTableSelectRows
-	} from '$components/base/datatables/actions';
-	import {
-		DataTableBody,
-		DataTableHead,
-		DataTableHeading
-	} from '$components/base/datatables/tables';
 	import { RequestSearchParams } from '$lib/request.svelte';
 	import { AppName } from '$lib';
 	import { Input, Label } from '$components/forms';
+	import { SideBarForm, Table, TableBottom, TableTop } from '$components/accounts';
+	import { Button, Icon } from '$components';
+	import { toastr } from '$components/toasts';
+	import { SortableColumn } from '$components/tables';
+	import DeleteButton from '$components/DeleteButton.svelte';
 
 	let { data }: { data: PageData } = $props();
 
-	type Category = { id: number; name: string };
-
-	const headings = [{ name: 'Select All' }, { name: 'Name' }, { name: 'Action' }];
-	const pageSizeOptions = [5, 10, 15, 20, 25];
-
-	let pageData = $state({
-		categories: data.data,
-		pagination: data.pagination
-	});
-
-	let showSideBar = $state(false);
-	let editCategory: Category | undefined = $state();
-
+	const api = '/api/categories';
+	const headings = [{ name: 'Name' }];
 	const categorySearchParams = new RequestSearchParams();
 
-	$effect(() => {
-		if (!showSideBar && editCategory) editCategory = undefined;
-	});
+	let showForm = $state(false);
+	let categories = $state(data.data);
+	let pagination = $state(data.pagination);
+	let editCategory: Category | undefined | null = $state();
+	let selectedRows: SelectedRows = $state({});
+
+	let selectedRowsSize = $derived(Object.keys(selectedRows).length);
+
+	function updateData(newData: { data: typeof categories; pagination: typeof pagination }) {
+		categories = newData.data;
+		pagination = newData.pagination;
+	}
+
+	function beforeSubmitForm() {
+		const deletedCount = selectedRowsSize;
+		const newTotalRecords = pagination.totalRecords - deletedCount;
+		const newTotalPages = Math.ceil(newTotalRecords / categorySearchParams.pageSize);
+
+		if (categorySearchParams.page > newTotalPages) categorySearchParams.page = newTotalPages;
+	}
 </script>
 
 <svelte:head>
@@ -65,198 +56,114 @@
 			<Button
 				class="flex items-center justify-center font-medium"
 				size="sm"
-				onclick={() => (showSideBar = true)}><Icon icon="plus" class="mr-2 size-4" />Add new</Button
+				onclick={() => (showForm = true)}><Icon icon="plus" class="mr-2 size-4" />Add new</Button
 			>
 		</div>
 
 		<div class="px-6 pb-6">
-			<DataTableWrapper
-				{headings}
-				data={pageData.categories}
+			<TableTop
 				requestSearchParams={categorySearchParams}
-				onsuccess={(newData: {
-					data: typeof pageData.categories;
-					pagination: typeof pageData.pagination;
-				}) => {
-					pageData.categories = newData.data;
-					pageData.pagination = newData.pagination;
+				searchUrl={api}
+				searchPlaceholder="Search for categories"
+				updateDataAfterSearching={updateData}
+				deleteButtonBeforeSubmitForm={beforeSubmitForm}
+				deleteValue={Object.values(selectedRows).map((a) => a.id)}
+				updateDataAfterDeleting={(newData) => {
+					updateData(newData);
+					selectedRows = {};
+					toastr.success('Categories deleted');
 				}}
-			>
-				{#snippet content(headings, data, requestSearchParams, rowsSelector, onsuccess)}
-					<DataTableTop>
-						<div class="bg-white dark:bg-gray-900">
-							<DataTableSearch
-								url="/api/categories"
-								placeholder="Search for categories"
-								{requestSearchParams}
-								{onsuccess}
-							/>
-						</div>
+				{selectedRowsSize}
+			/>
 
-						{#if rowsSelector.size > 0}
-							<DataTableDeleteButton
-								url="?/delete"
-								totalRecords={pageData.pagination.totalRecords}
-								requestSearchParams={categorySearchParams}
-								deleteIds={Object.keys(rowsSelector.rows)}
-								onsuccess={async (newData) => {
-									await onsuccess?.(newData);
-									rowsSelector.rows = {};
-									toastr.success('Categories deleted');
-								}}
-							>
-								Delete ({rowsSelector.size})
-							</DataTableDeleteButton>
-						{/if}
-					</DataTableTop>
-					<DataTable>
-						<DataTableHead {headings}>
-							{#snippet th(heading)}
-								{#if heading.name === 'Select All'}
-									<th scope="col" class="w-[1%] p-4">
-										<DataTableSelectRows
-											id="select-all"
-											checked={data.length > 0 && rowsSelector.size == data.length}
-											screenReader={heading.name}
-											onchange={(e) => {
-												rowsSelector.rows = !e.currentTarget.checked
-													? {}
-													: data.reduce((obj, a) => Object.assign(obj, { [a.id]: a }), {});
-											}}
-										/>
-									</th>
-								{:else if heading.name === 'Action'}
-									<th scope="col">{heading.name}</th>
-								{:else}
-									<DataTableHeading
-										api="/api/categories"
-										{heading}
-										{requestSearchParams}
-										{onsuccess}
-									/>
-								{/if}
-							{/snippet}
-						</DataTableHead>
-						<DataTableBody {data} colsCount={headings.length}>
-							{#snippet td(category)}
-								<td class="w-4 p-4">
-									<DataTableSelectRows
-										id="select-{category.id}"
-										checked={Boolean(rowsSelector.rows[category.id])}
-										screenReader="Select category {category.id}"
-										onchange={(e) => {
-											if (e.currentTarget.checked) {
-												rowsSelector.rows[category.id] = category;
-											} else if (!e.currentTarget.checked && rowsSelector.rows[category.id]) {
-												delete rowsSelector.rows[category.id];
-											}
-										}}
-									/>
-								</td>
-								<td class="px-5 py-3">{category.name}</td>
-								<td class="flex items-center justify-center gap-x-3 px-5 py-3 text-right">
-									<button
-										onclick={() => {
-											editCategory = category;
-											showSideBar = true;
-										}}
-										title="Edit"
-									>
-										<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
-									</button>
-									<DataTableDeleteButton
-										type="icon"
-										url="?/delete"
-										totalRecords={pageData.pagination.totalRecords}
-										{requestSearchParams}
-										deleteIds={[category.id]}
-										onsuccess={async (newData) => {
-											await onsuccess?.(newData);
-											toastr.success('Category deleted');
-										}}
-									/>
-								</td>
-							{/snippet}
-						</DataTableBody>
-					</DataTable>
-					<DataTableBottom>
-						<span
-							class="my-4 block w-full text-sm font-normal text-gray-500 dark:text-gray-400 md:inline md:w-auto lg:mb-4"
-							>{rowsSelector.size} of {data.length} row(s) selected.</span
-						>
-						<div class="my-4 inline-flex items-center justify-center">
-							<DataTablePageSizeSelector
-								{pageSizeOptions}
-								url="/api/categories"
-								{requestSearchParams}
-								{onsuccess}
-							/>
-							<DataTablePagination
-								url="/api/categories"
-								{...pageData.pagination}
-								{requestSearchParams}
-								{onsuccess}
-								dataLength={data.length}
-							/>
-						</div>
-					</DataTableBottom>
+			<Table collection={categories} {headings} bind:selectedRows>
+				{#snippet head(heading)}
+					<SortableColumn
+						url={api}
+						{heading}
+						searchParams={categorySearchParams}
+						success={updateData}
+					/>
 				{/snippet}
-			</DataTableWrapper>
+				{#snippet row(category, _)}
+					<td class="px-5 py-3">{category.name}</td>
+				{/snippet}
+				{#snippet rowActions(category, _)}
+					<button
+						onclick={() => {
+							editCategory = category;
+							showForm = true;
+						}}
+						title="Edit"
+					>
+						<Icon icon="edit" class="font-medium text-blue-600 dark:text-blue-500" />
+					</button>
+					<DeleteButton
+						iconOnly
+						{beforeSubmitForm}
+						searchParams={categorySearchParams}
+						value={[category.id]}
+						success={(newData) => {
+							updateData(newData);
+							selectedRows = {};
+							toastr.success('Category deleted');
+						}}
+					/>
+				{/snippet}
+			</Table>
+
+			<TableBottom
+				{selectedRowsSize}
+				searchParams={categorySearchParams}
+				collection={categories}
+				pageSizeSelectorUrl={api}
+				pageSizeSelectorAfterSuccess={(newData) => {
+					updateData(newData);
+					selectedRows = {};
+				}}
+				bind:pagination
+				paginationUrl={api}
+				paginationAfterSuccess={(newData) => {
+					updateData(newData);
+					selectedRows = {};
+				}}
+			/>
 		</div>
 	</div>
 </div>
 
-<SideBar bind:show={showSideBar} outsideclose direction="right" class="w-full lg:max-w-md">
-	<SideBarCloseButton onclick={() => (showSideBar = false)} left />
-
-	<div class="overflow-y-auto px-3 py-7">
-		{#if !editCategory}
-			<SideBarHeading textCenter>New Category</SideBarHeading>
-			<SideBarSubHeading>Create a new category to organize your transactions.</SideBarSubHeading>
-		{:else}
-			<SideBarHeading textCenter>Edit Category</SideBarHeading>
-			<SideBarSubHeading>Edit an existing category.</SideBarSubHeading>
+<SideBarForm
+	bind:show={showForm}
+	bind:editData={editCategory}
+	searchParams={categorySearchParams}
+	createHeading="New Category"
+	createSubHeading="Create a new category to organize your transactions."
+	editHeading="Edit Category"
+	editSubHeading="Edit an existing category."
+	submitButtonCreateText="Create category"
+	updateData={(newData) => {
+		if (editCategory) {
+			toastr.success('Category updated');
+			editCategory = undefined;
+		} else {
+			toastr.success('Category created');
+		}
+		updateData(newData);
+	}}
+>
+	{#snippet formContent(formState)}
+		{#if editCategory}
+			<input type="number" hidden name="id" value={editCategory.id} />
 		{/if}
 
-		<FormPost
-			action={(editCategory ? '?/edit' : '?/create') + `&${categorySearchParams.toString()}`}
-			onsuccess={async ({ successResult, update }) => {
-				showSideBar = false;
-
-				const data = successResult.data!;
-
-				if (editCategory) {
-					toastr.success('Category updated');
-					editCategory = undefined;
-				} else {
-					toastr.success('Category created');
-				}
-
-				pageData.categories = data.data;
-				pageData.pagination = data.pagination;
-
-				await update();
-			}}
-		>
-			{#snippet content(state)}
-				{#if editCategory}
-					<input type="number" hidden name="id" value={editCategory.id} />
-				{/if}
-
-				<Label for="name">Name</Label>
-				<Input
-					class="mt-3 w-full"
-					placeholder="e.g. Food, Travel, etc."
-					value={editCategory?.name}
-					id="name"
-					name="name"
-					bind:disabled={state.submitting}
-				/>
-
-				<SubmitButton bind:disabled={state.submitting}>
-					{editCategory ? 'Save changes' : 'Create category'}
-				</SubmitButton>
-			{/snippet}
-		</FormPost>
-	</div>
-</SideBar>
+		<Label for="name">Name</Label>
+		<Input
+			class="mt-3 w-full"
+			placeholder="e.g. Food, Travel, etc."
+			value={editCategory?.name}
+			id="name"
+			name="name"
+			bind:disabled={formState.submitting}
+		/>
+	{/snippet}
+</SideBarForm>

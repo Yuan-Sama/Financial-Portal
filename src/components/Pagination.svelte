@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { applyAction } from '$app/forms';
-	import { Button, Icon } from '$components/base';
-	import { toastr } from '$components/base/toasts';
+	import { Button, Icon } from '$components';
+	import { toastr } from '$components/toasts';
 	import type { RequestSearchParams } from '$lib/request.svelte';
 
 	let {

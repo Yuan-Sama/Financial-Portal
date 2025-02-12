@@ -3,8 +3,8 @@
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import { page } from '$app/stores';
-	import { SideBar, SideBarCloseButton, SideBarHeading } from '$components/base/sidebars';
 	import { AppName } from '$lib';
+	import { SideBar, SideBarCloseButton, SideBarHeading } from '$components/sidebars';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
