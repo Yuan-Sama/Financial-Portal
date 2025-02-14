@@ -23,7 +23,7 @@
 </script>
 
 <table
-	class="w-full overflow-x-auto border text-gray-500 shadow-md dark:text-gray-400 sm:rounded-sm"
+	class="w-full overflow-x-auto border text-gray-500 shadow-md dark:text-gray-400 sm:rounded-xs"
 >
 	<thead class="bg-gray-100 dark:bg-gray-800">
 		<tr>

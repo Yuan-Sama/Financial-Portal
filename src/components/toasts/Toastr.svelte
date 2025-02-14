@@ -120,7 +120,7 @@
 	}
 </script>
 
-<div class={clsx('fixed z-[9999] max-w-xl space-y-3', restProps.class)} role="alert">
+<div class={clsx('fixed z-9999 max-w-xl space-y-3', restProps.class)} role="alert">
 	{#each toasts as t (t)}
 		{@render toast(t, remove, pushFrom)}
 	{/each}

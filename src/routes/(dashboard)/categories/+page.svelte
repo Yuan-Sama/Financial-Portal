@@ -44,8 +44,8 @@
 	<title>{AppName} - Categories</title>
 </svelte:head>
 
-<div class="mx-auto -mt-24 w-full max-w-screen-2xl pb-10">
-	<div class="rounded-lg bg-white p-6 shadow-sm drop-shadow-sm dark:bg-gray-800">
+<div class="mx-auto -mt-24 w-full max-w-(--breakpoint-2xl) pb-10">
+	<div class="rounded-lg bg-white p-6 shadow-xs drop-shadow-xs dark:bg-gray-800">
 		<div
 			class="flex flex-col gap-y-2 space-y-1.5 p-6 lg:flex-row lg:items-center lg:justify-between"
 		>

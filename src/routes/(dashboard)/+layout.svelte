@@ -46,8 +46,8 @@
 
 <svelte:document onclick={(e) => onclick(e)} />
 
-<header class="bg-gradient-to-b from-primary-700 to-primary-500 px-4 py-8 pb-36 lg:px-14">
-	<div class="mx-auto max-w-screen-2xl">
+<header class="bg-linear-to-b from-primary-700 to-primary-500 px-4 py-8 pb-36 lg:px-14">
+	<div class="mx-auto max-w-(--breakpoint-2xl)">
 		<div class="mb-14 flex w-full items-center justify-between">
 			<div class="flex items-center lg:gap-x-16">
 				<a href="/">
@@ -62,7 +62,7 @@
 				<nav class="hidden items-center gap-x-2 overflow-x-auto lg:flex">
 					{#each routes as route}
 						<a
-							class="mb-2 me-2 rounded-lg px-3 py-2 text-center text-sm font-medium text-white outline-none hover:bg-white/20 focus:bg-white/30 focus-visible:ring-transparent focus-visible:ring-offset-0 transition{$page
+							class="mb-2 me-2 rounded-lg px-3 py-2 text-center text-sm font-medium text-white outline-hidden hover:bg-white/20 focus:bg-white/30 focus-visible:ring-transparent focus-visible:ring-offset-0 transition{$page
 								.url.pathname === route.href
 								? ' bg-white/10'
 								: ''}"
@@ -72,11 +72,11 @@
 				</nav>
 
 				<nav
-					class="mx-auto flex max-w-screen-xl flex-wrap items-center justify-between p-4 lg:hidden"
+					class="mx-auto flex max-w-(--breakpoint-xl) flex-wrap items-center justify-between p-4 lg:hidden"
 				>
 					<button
 						type="button"
-						class="inline-flex h-10 w-10 items-center justify-center rounded-lg p-2 text-sm text-white outline-none hover:bg-white/20 focus:bg-white/30 focus-visible:ring-transparent focus-visible:ring-offset-0"
+						class="inline-flex h-10 w-10 items-center justify-center rounded-lg p-2 text-sm text-white outline-hidden hover:bg-white/20 focus:bg-white/30 focus-visible:ring-transparent focus-visible:ring-offset-0"
 						aria-expanded={show}
 						onclick={() => (show = true)}
 					>

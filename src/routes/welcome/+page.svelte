@@ -24,7 +24,7 @@
 
 <div class="min-h-full bg-[#f2ece5]">
 	<main
-		class="mx-auto grid h-screen max-w-screen-xl px-4 py-8 lg:grid-cols-12 lg:gap-8 lg:py-16 xl:gap-0"
+		class="mx-auto grid h-screen max-w-(--breakpoint-xl) px-4 py-8 lg:grid-cols-12 lg:gap-8 lg:py-16 xl:gap-0"
 	>
 		<div class="mr-auto place-self-center lg:col-span-6">
 			<h1

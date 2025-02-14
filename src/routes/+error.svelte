@@ -10,8 +10,8 @@
 </svelte:head>
 
 <section class="flex min-h-screen items-center bg-white dark:bg-gray-900">
-	<main class="mx-auto max-w-screen-xl pb-8 lg:pb-16">
-		<div class="mx-auto max-w-screen-sm text-center">
+	<main class="mx-auto max-w-(--breakpoint-xl) pb-8 lg:pb-16">
+		<div class="mx-auto max-w-(--breakpoint-sm) text-center">
 			<h1
 				class="mb-4 text-7xl font-extrabold tracking-tight text-primary-600 dark:text-primary-500 lg:text-9xl"
 			>
@@ -33,7 +33,7 @@
 			</p>
 			<a
 				href="/"
-				class="my-4 inline-flex rounded-lg bg-primary-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900"
+				class="my-4 inline-flex rounded-lg bg-primary-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-800 focus:outline-hidden focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900"
 				>Back to Homepage</a
 			>
 		</div>

@@ -23,7 +23,7 @@
 <svelte:window bind:scrollY />
 
 {#if scrollY > showAtPx}
-	<div class="fixed bottom-4 right-4 z-[996]" transition:fade={{ duration: 700 }}>
+	<div class="fixed bottom-4 right-4 z-996" transition:fade={{ duration: 700 }}>
 		<Button
 			class="leading-0 flex size-10 animate-bounce items-center justify-center"
 			shape="round"

@@ -54,7 +54,7 @@
 	{...restProps}
 	{disabled}
 	class={clsx(
-		'focus:outline-none',
+		'focus:outline-hidden',
 		!disabled && 'focus:ring-4',
 		disabled && 'cursor-not-allowed focus:ring-0',
 		sizes.xs === size && 'px-3 py-2 text-xs',
